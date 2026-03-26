@@ -720,11 +720,6 @@ body{
       </div>
     </div>
 
-    <!-- Avertissement disqualification -->
-    <div id="dq-warning" style="display:none;background:rgba(227,27,35,.12);border:1px solid rgba(227,27,35,.4);border-radius:8px;padding:10px 14px;font-family:var(--C);font-size:12px;font-weight:700;color:#ff6b70;letter-spacing:1px;margin-bottom:8px;">
-      ⚠️ Gardien, Défense, Milieu et Attaque sont obligatoires pour valider !
-    </div>
-
     <!-- Total -->
     <div class="score-total-bar">
       <div class="stb-label">⚡ TOTAL ÉQUIPE</div>
@@ -934,10 +929,6 @@ function refreshTotal(){
   const get = id => parseInt(document.getElementById(id).value)||0;
   const total = get('sv-gb')+get('sv-def')+get('sv-mil')+get('sv-att')+get('sv-boff')+get('sv-bdef');
   document.getElementById('sv-total').textContent = total;
-  // Show DQ warning if any mandatory field is empty
-  const mandatory = ['sv-gb','sv-def','sv-mil','sv-att'];
-  const missing = mandatory.some(id => !(parseInt(document.getElementById(id).value) > 0));
-  document.getElementById('dq-warning').style.display = missing ? 'block' : 'none';
 }
 
 function calcProfTotal(sc){
@@ -946,17 +937,11 @@ function calcProfTotal(sc){
 
 function saveScoreProf(){
   const get = id => Math.max(0, parseInt(document.getElementById(id).value)||0);
-  const gb  = get('sv-gb');
-  const def = get('sv-def');
-  const mil = get('sv-mil');
-  const att = get('sv-att');
-  // Mandatory check
-  if(!gb || !def || !mil || !att){
-    document.getElementById('dq-warning').style.display='block';
-    return;
-  }
   PROF[currentProfTeam] = {
-    gb, def, mil, att,
+    gb:   get('sv-gb'),
+    def:  get('sv-def'),
+    mil:  get('sv-mil'),
+    att:  get('sv-att'),
     boff: get('sv-boff'),
     bdef: get('sv-bdef'),
   };

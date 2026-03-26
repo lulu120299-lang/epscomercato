@@ -1004,14 +1004,50 @@ function closeModal(id){document.getElementById(id).classList.remove('open');}
 // INIT — LOAD SAVED STATE
 // ================================================================
 function init(){
+  emailjs.init(EMAILJS_PUBKEY);
   loadEleveState();
   buildObjectivesUI();
   buildCourseGrid();
   renderBattle();
   setTimeout(()=>{
     document.getElementById('loader').style.display='none';
-    goTo('screen-home');
+    restoreScreen();
   },1400);
+}
+
+function restoreScreen(){
+  // Si une chasse était en cours, on restaure
+  if(E.huntStarted && !E.huntFinished && E.cardNum){
+    // Restore team UI
+    if(E.team){
+      document.querySelectorAll('.team-card').forEach(c=>c.classList.remove('selected'));
+      const tc = document.getElementById('tc-'+E.team);
+      if(tc) tc.classList.add('selected');
+    }
+    renderHunt();
+    startGPS();
+    startTimer();
+    goTo('screen-hunt');
+  } else if(E.huntFinished && E.cardNum && E.team){
+    // Était sur le récap
+    renderRecap();
+    goTo('screen-recap');
+  } else if(E.team && E.level){
+    // Avait choisi équipe + niveau → retour au choix de carte
+    document.getElementById('course-pill').innerHTML =
+      `<span class="pill ${E.team}">${TEAM_JERSEY[E.team]} ${TEAM_LABEL[E.team]}</span>`;
+    buildCourseGrid();
+    goTo('screen-course');
+  } else if(E.team){
+    // Avait juste choisi son équipe
+    document.querySelectorAll('.team-card').forEach(c=>c.classList.remove('selected'));
+    const tc = document.getElementById('tc-'+E.team);
+    if(tc) tc.classList.add('selected');
+    document.getElementById('btn-val-team').style.display = 'inline-flex';
+    goTo('screen-team');
+  } else {
+    goTo('screen-home');
+  }
 }
 
 function loadEleveState(){
@@ -1093,7 +1129,6 @@ function sendSOS(){
 
     const typeLabel = sosType === 'perdu' ? '🗺️ ÉLÈVE PERDU(E)' : '🤕 ÉLÈVE BLESSÉ(E)';
 
-    emailjs.init(EMAILJS_PUBKEY);
     emailjs.send(EMAILJS_SERVICE, EMAILJS_TEMPLATE, {
       to_email:    PROF_EMAIL,
       prenom:      prenom,
@@ -1167,6 +1202,7 @@ function enterEleve(){
 // ================================================================
 function selectTeam(team){
   E.team = team;
+  saveEleveState();
   document.querySelectorAll('.team-card').forEach(c=>c.classList.remove('selected'));
   document.getElementById('tc-'+team).classList.add('selected');
   document.getElementById('btn-val-team').style.display = 'inline-flex';
@@ -1182,9 +1218,11 @@ function confirmTeam(){
 // ================================================================
 function goToCourse(){
   if(!E.team) return;
-  // Reset level/card for a fresh hunt
   E.level = null;
   E.cardNum = null;
+  E.huntStarted = false;
+  E.huntFinished = false;
+  saveEleveState();
   document.getElementById('course-pill').innerHTML =
     `<span class="pill ${E.team}">${TEAM_JERSEY[E.team]} ${TEAM_LABEL[E.team]}</span>`;
   buildCourseGrid();

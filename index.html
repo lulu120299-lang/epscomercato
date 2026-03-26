@@ -409,10 +409,6 @@ body{
     <div class="title-sub">Choisis ton équipe</div>
   </div>
   <div class="wrap">
-    <div id="team-lock-banner" class="lock-banner" style="display:none">
-      <span class="lock-banner-icon">🔒</span>
-      <div class="lock-banner-txt">Ton équipe est <span id="locked-team-name">ROUGE FC</span> pour toute la séance.<br>Tu ne peux plus en changer.</div>
-    </div>
     <div class="section-label">Choisir son équipe</div>
     <div class="team-grid">
       <div class="team-card rouge" id="tc-rouge" onclick="selectTeam('rouge')">
@@ -432,7 +428,7 @@ body{
       </div>
     </div>
     <div class="text-c mt-4">
-      <button class="btn btn-green" id="btn-val-team" style="display:none" onclick="confirmTeam()">⚽ REJOINDRE CETTE ÉQUIPE</button>
+      <button class="btn btn-green" id="btn-val-team" style="display:none" onclick="confirmTeam()">→ CHOISIR LE PARCOURS</button>
     </div>
     <div class="flex-c mt-3">
       <button class="btn btn-ghost btn-sm" onclick="goTo('screen-home')">← ACCUEIL</button>
@@ -463,9 +459,11 @@ body{
   </div>
   <div class="wrap">
     <div class="card-select-area">
-      <div class="card-select-title">📍 NUMÉRO DE CARTE</div>
-      <div class="card-select-sub">Rentre le numéro de la carte que tu as prise (1 à 30)</div>
-      <input type="number" id="card-number-input" class="card-number-input" min="1" max="30" placeholder="--" oninput="onCardInput()">
+      <div class="card-select-title">📋 CHOISIR TA CARTE</div>
+      <div class="card-select-sub">Sélectionne le numéro de ta carte de parcours</div>
+      <select id="card-number-input" onchange="onCardInput()" style="background:rgba(0,0,0,.6);border:2px solid rgba(0,179,65,.4);border-radius:8px;color:var(--gold);font-family:var(--H);font-size:22px;padding:12px 20px;width:200px;outline:none;cursor:pointer;text-align:center;">
+        <option value="">-- Choisir --</option>
+      </select>
       <div style="font-family:var(--C);font-size:11px;color:#f87171;min-height:16px;margin-top:8px;" id="card-error"></div>
     </div>
     <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:16px;margin-bottom:20px;">
@@ -611,7 +609,7 @@ body{
     <div id="bonus-reveal-area"></div>
 
     <div class="flex-c mt-4">
-      <button class="btn btn-ghost btn-sm" onclick="retourChasse()">🔄 RETOUR À LA CHASSE</button>
+      <button class="btn btn-ghost btn-sm" onclick="retourChasse()">🔄 NOUVEAU PARCOURS</button>
       <button class="btn btn-gold" onclick="terminerMercato()">🏁 TERMINER LE MERCATO</button>
     </div>
   </div>
@@ -720,19 +718,6 @@ body{
   </div>
 </div>
 
-<!-- CONFIRM TEAM LOCK -->
-<div class="overlay" id="modal-confirm-team">
-  <div class="modal" id="confirm-team-inner" style="border-color:var(--green)">
-    <div style="font-size:52px;margin-bottom:10px" id="confirm-team-jersey">🟥</div>
-    <div class="modal-title" id="confirm-team-name" style="color:var(--green)">ROUGE FC</div>
-    <div class="modal-sub">⚠️ Attention ! Une fois confirmé, tu ne pourras <strong>plus changer d'équipe</strong> pendant toute la séance.</div>
-    <div class="flex-c">
-      <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-confirm-team')">← ANNULER</button>
-      <button class="btn btn-green btn-sm" onclick="lockTeam()">🔒 CONFIRMER</button>
-    </div>
-  </div>
-</div>
-
 <!-- PLAYER REVEAL -->
 <div class="overlay" id="modal-reveal">
   <div class="modal" id="reveal-modal-inner">
@@ -817,56 +802,54 @@ body{
 
 <script>
 // ================================================================
-// DATA
+// DATA — CARTES (depuis fichier Excel Foot CO)
+// Cartes 1-7: Parcours 1 (Division 4)
+// Cartes 8-16: Parcours 2 (Ligue 1)
+// Cartes 17-23: Parcours 3 (Ligue des Champions)
+// Cartes 24-30: Parcours 4 (TOTY)
 // ================================================================
-// Temporary player data — replace with Excel import later
-// Format: baliseNum -> { name, pos, photo, force, rarity }
-// POS: 'GB' | 'DEF' | 'MIL' | 'ATT'
-const BALISE_DATA = {
-  // LEVEL 1 — Bronze
-  1: {name:'Giroud',    pos:'ATT', photo:'⚽', force:68, rarity:'bronze', level:1},
-  2: {name:'Maignan',   pos:'GB',  photo:'🧤', force:63, rarity:'bronze', level:1},
-  3: {name:'Hernandez', pos:'DEF', photo:'🛡️', force:67, rarity:'bronze', level:1},
-  4: {name:'Camavinga', pos:'MIL', photo:'💪', force:69, rarity:'bronze', level:1},
-  5: {name:'Pavard',    pos:'DEF', photo:'🧱', force:64, rarity:'bronze', level:1},
-  6: {name:'Benzema',   pos:'ATT', photo:'👑', force:65, rarity:'bronze', level:1},
-  7: {name:'Diallo',    pos:'MIL', photo:'🏃', force:66, rarity:'bronze', level:1},
-  8: {name:'Saliba',    pos:'DEF', photo:'⛓️', force:66, rarity:'bronze', level:1},
-  // LEVEL 2 — Silver
-  9:  {name:'Griezmann',  pos:'ATT', photo:'🎯', force:78, rarity:'silver', level:2},
-  10: {name:'Lloris',     pos:'GB',  photo:'🧤', force:73, rarity:'silver', level:2},
-  11: {name:'Kante',      pos:'MIL', photo:'⚡', force:77, rarity:'silver', level:2},
-  12: {name:'Varane',     pos:'DEF', photo:'🧱', force:76, rarity:'silver', level:2},
-  13: {name:'Thuram',     pos:'ATT', photo:'🦅', force:75, rarity:'silver', level:2},
-  14: {name:'Konate',     pos:'DEF', photo:'🛡️', force:75, rarity:'silver', level:2},
-  15: {name:'Pogba',      pos:'MIL', photo:'💥', force:74, rarity:'silver', level:2},
-  16: {name:'Tchouameni', pos:'MIL', photo:'🎶', force:72, rarity:'silver', level:2},
-  // LEVEL 3 — Gold
-  17: {name:'Mbappe',     pos:'ATT', photo:'🚀', force:89, rarity:'gold', level:3},
-  18: {name:'Haaland',    pos:'ATT', photo:'💣', force:91, rarity:'gold', level:3},
-  19: {name:'Bellingham',  pos:'MIL', photo:'🎸', force:87, rarity:'gold', level:3},
-  20: {name:'De Bruyne',  pos:'MIL', photo:'🧙', force:90, rarity:'gold', level:3},
-  21: {name:'Salah',      pos:'ATT', photo:'⚡', force:88, rarity:'gold', level:3},
-  22: {name:'Alisson',    pos:'GB',  photo:'🧤', force:85, rarity:'gold', level:3},
-  23: {name:'Rudiger',    pos:'DEF', photo:'🦁', force:84, rarity:'gold', level:3},
-  24: {name:'Vinicius',   pos:'ATT', photo:'🌟', force:88, rarity:'gold', level:3},
-  // LEVEL 4 — TOTY
-  25: {name:'Messi',      pos:'ATT', photo:'🐐', force:98, rarity:'toty', level:4},
-  26: {name:'Ronaldo',    pos:'ATT', photo:'👑', force:96, rarity:'toty', level:4},
-  27: {name:'Yamal',      pos:'ATT', photo:'⚡', force:94, rarity:'toty', level:4},
-  28: {name:'Pedri',      pos:'MIL', photo:'🌀', force:92, rarity:'toty', level:4},
-  29: {name:'Rodri',      pos:'MIL', photo:'🏆', force:95, rarity:'toty', level:4},
-  30: {name:'Courtois',   pos:'GB',  photo:'🧤', force:91, rarity:'toty', level:4},
+const CARTES = {
+  1: {balises:[{num:44,pos:"MIL",name:"Tom Leroy",force:5,photo:"⚙️",rarity:"bronze"},{num:48,pos:"MIL",name:"Alex Pinto",force:5,photo:"⚙️",rarity:"bronze"},{num:49,pos:"DEF",name:"Jules Perrin",force:5,photo:"🛡️",rarity:"bronze"}],timeMin:"03:52",timeMax:"06:14",dist:632,level:1},
+  2: {balises:[{num:52,pos:"DEF",name:"Enzo Martin",force:7,photo:"🛡️",rarity:"bronze"},{num:53,pos:"DEF",name:"Sami Belkacem",force:7,photo:"🛡️",rarity:"bronze"},{num:45,pos:"MIL",name:"Sami Ouattara",force:7,photo:"⚙️",rarity:"bronze"}],timeMin:"04:45",timeMax:"08:00",dist:868,level:1},
+  3: {balises:[{num:46,pos:"BUT",name:"Lucas Petit",force:9,photo:"⚽",rarity:"bronze"},{num:47,pos:"BUT",name:"Noe Lambert",force:9,photo:"⚽",rarity:"bronze"},{num:50,pos:"BUT",name:"Enzo Vidal",force:9,photo:"⚽",rarity:"bronze"}],timeMin:"04:56",timeMax:"08:22",dist:916,level:1},
+  4: {balises:[{num:49,pos:"MIL",name:"Hugo Bernard",force:12,photo:"⚙️",rarity:"bronze"},{num:60,pos:"MIL",name:"Ilan Roche",force:12,photo:"⚙️",rarity:"bronze"},{num:43,pos:"MIL",name:"Tom Renaud",force:12,photo:"⚙️",rarity:"bronze"}],timeMin:"05:43",timeMax:"09:57",dist:1127,level:1},
+  5: {balises:[{num:48,pos:"DEF",name:"Theo Dubois",force:15,photo:"🛡️",rarity:"bronze"},{num:41,pos:"DEF",name:"Adam Torres",force:15,photo:"🛡️",rarity:"bronze"},{num:46,pos:"DEF",name:"Adam Boulanger",force:15,photo:"🛡️",rarity:"bronze"}],timeMin:"05:45",timeMax:"10:01",dist:1136,level:1},
+  6: {balises:[{num:50,pos:"BUT",name:"Nathan Garcia",force:18,photo:"⚽",rarity:"bronze"},{num:70,pos:"BUT",name:"Mehdi Ait",force:18,photo:"⚽",rarity:"bronze"},{num:53,pos:"BUT",name:"Ilyes Haddad",force:18,photo:"⚽",rarity:"bronze"}],timeMin:"05:50",timeMax:"10:11",dist:1158,level:1},
+  7: {balises:[{num:48,pos:"MIL",name:"Leo Morel",force:20,photo:"⚙️",rarity:"bronze"},{num:53,pos:"MIL",name:"Tiago Alves",force:20,photo:"⚙️",rarity:"bronze"},{num:70,pos:"MIL",name:"Noa Chevalier",force:20,photo:"⚙️",rarity:"bronze"}],timeMin:"05:57",timeMax:"10:24",dist:1188,level:1},
+  8: {balises:[{num:44,pos:"DEF",name:"Maxime Roux",force:23,photo:"🛡️",rarity:"silver"},{num:54,pos:"DEF",name:"Nolan Perret",force:23,photo:"🛡️",rarity:"silver"},{num:57,pos:"DEF",name:"Lucas Marchal",force:23,photo:"🛡️",rarity:"silver"}],timeMin:"06:23",timeMax:"11:16",dist:1302,level:2},
+  9: {balises:[{num:74,pos:"BUT",name:"Noa Faure",force:25,photo:"⚽",rarity:"silver"},{num:44,pos:"BUT",name:"Yanis Benali",force:25,photo:"⚽",rarity:"silver"},{num:47,pos:"BUT",name:"Yanis Grondin",force:25,photo:"⚽",rarity:"silver"}],timeMin:"06:47",timeMax:"12:04",dist:1410,level:2},
+  10: {balises:[{num:50,pos:"MIL",name:"Yanis Lopez",force:28,photo:"⚙️",rarity:"silver"},{num:39,pos:"MIL",name:"Mathis Colin",force:28,photo:"⚙️",rarity:"silver"},{num:54,pos:"MIL",name:"Theo Lemoine",force:28,photo:"⚙️",rarity:"silver"}],timeMin:"06:55",timeMax:"12:21",dist:1449,level:2},
+  11: {balises:[{num:38,pos:"MIL",name:"Rayan Cherki",force:32,photo:"⚙️",rarity:"silver"},{num:41,pos:"MIL",name:"Xavi Simons",force:35,photo:"⚙️",rarity:"silver"},{num:60,pos:"MIL",name:"Arda Guler",force:35,photo:"⚙️",rarity:"silver"}],timeMin:"07:16",timeMax:"13:02",dist:1539,level:2},
+  12: {balises:[{num:68,pos:"BUT",name:"Elye Wahi",force:36,photo:"⚽",rarity:"silver"},{num:64,pos:"ATT",name:"Ansu Fati",force:40,photo:"🚀",rarity:"silver"},{num:60,pos:"ATT",name:"Alejandro Garnacho",force:40,photo:"🚀",rarity:"silver"}],timeMin:"07:29",timeMax:"13:28",dist:1597,level:2},
+  13: {balises:[{num:53,pos:"BUT",name:"Hugo Ekitike",force:40,photo:"⚽",rarity:"silver"},{num:67,pos:"MIL",name:"Giovanni Reyna",force:45,photo:"⚙️",rarity:"silver"},{num:64,pos:"MIL",name:"Cole Palmer",force:45,photo:"⚙️",rarity:"silver"}],timeMin:"07:34",timeMax:"13:38",dist:1619,level:2},
+  14: {balises:[{num:36,pos:"BUT",name:"Amine Gouiri",force:45,photo:"⚽",rarity:"silver"},{num:41,pos:"ATT",name:"Mykhailo Mudryk",force:50,photo:"🚀",rarity:"silver"},{num:47,pos:"ATT",name:"Nico Williams",force:50,photo:"🚀",rarity:"silver"}],timeMin:"07:35",timeMax:"13:40",dist:1622,level:2},
+  15: {balises:[{num:70,pos:"MIL",name:"Maxence Caqueret",force:50,photo:"⚙️",rarity:"silver"},{num:68,pos:"MIL",name:"Mason Mount",force:55,photo:"⚙️",rarity:"silver"},{num:65,pos:"MIL",name:"Conor Gallagher",force:55,photo:"⚙️",rarity:"silver"}],timeMin:"07:40",timeMax:"13:51",dist:1647,level:2},
+  16: {balises:[{num:40,pos:"MIL",name:"Youssouf Fofana",force:55,photo:"⚙️",rarity:"silver"},{num:53,pos:"MIL",name:"Declan Rice",force:60,photo:"⚙️",rarity:"silver"},{num:64,pos:"MIL",name:"Moises Caicedo",force:60,photo:"⚙️",rarity:"silver"}],timeMin:"07:50",timeMax:"14:10",dist:1690,level:2},
+  17: {balises:[{num:65,pos:"DEF",name:"Jonathan Clauss",force:60,photo:"🛡️",rarity:"gold"},{num:48,pos:"DEF",name:"Reece James",force:65,photo:"🛡️",rarity:"gold"},{num:50,pos:"DEF",name:"Dayot Upamecano",force:65,photo:"🛡️",rarity:"gold"}],timeMin:"07:58",timeMax:"14:26",dist:1725,level:3},
+  18: {balises:[{num:50,pos:"BUT",name:"Wissam Ben Yedder",force:65,photo:"⚽",rarity:"gold"},{num:38,pos:"MIL",name:"Paulo Dybala",force:70,photo:"⚙️",rarity:"gold"},{num:71,pos:"MIL",name:"Christopher Nkunku",force:70,photo:"⚙️",rarity:"gold"}],timeMin:"07:58",timeMax:"14:26",dist:1726,level:3},
+  19: {balises:[{num:61,pos:"MIL",name:"Jordan Veretout",force:70,photo:"⚙️",rarity:"gold"},{num:47,pos:"ATT",name:"Serge Gnabry",force:75,photo:"🚀",rarity:"gold"},{num:37,pos:"ATT",name:"Leroy Sane",force:75,photo:"🚀",rarity:"gold"}],timeMin:"08:09",timeMax:"14:49",dist:1776,level:3},
+  20: {balises:[{num:70,pos:"DEF",name:"Presnel Kimpembe",force:75,photo:"🛡️",rarity:"gold"},{num:67,pos:"DEF",name:"Kalidou Koulibaly",force:80,photo:"🛡️",rarity:"gold"},{num:42,pos:"DEF",name:"Milan Skriniar",force:80,photo:"🛡️",rarity:"gold"}],timeMin:"08:50",timeMax:"16:11",dist:1960,level:3},
+  21: {balises:[{num:69,pos:"ATT",name:"Ousmane Dembele",force:80,photo:"🚀",rarity:"gold"},{num:52,pos:"DEF",name:"Achraf Hakimi",force:84,photo:"🛡️",rarity:"gold"},{num:36,pos:"DEF",name:"Alphonso Davies",force:84,photo:"🛡️",rarity:"gold"}],timeMin:"08:55",timeMax:"16:20",dist:1980,level:3},
+  22: {balises:[{num:36,pos:"DEF",name:"Theo Hernandez",force:83,photo:"🛡️",rarity:"gold"},{num:56,pos:"MIL",name:"Bernardo Silva",force:86,photo:"⚙️",rarity:"gold"},{num:49,pos:"MIL",name:"Pedri",force:86,photo:"⚙️",rarity:"gold"}],timeMin:"09:04",timeMax:"16:39",dist:2022,level:3},
+  23: {balises:[{num:75,pos:"DEF",name:"Jules Kounde",force:85,photo:"🛡️",rarity:"gold"},{num:70,pos:"MIL",name:"Bruno Fernandes",force:88,photo:"⚙️",rarity:"gold"},{num:40,pos:"MIL",name:"Martin Odegaard",force:88,photo:"⚙️",rarity:"gold"}],timeMin:"09:10",timeMax:"16:51",dist:2048,level:3},
+  24: {balises:[{num:59,pos:"MIL",name:"Aurelien Tchouameni",force:87,photo:"⚙️",rarity:"toty"},{num:75,pos:"MIL",name:"Frenkie de Jong",force:89,photo:"⚙️",rarity:"toty"},{num:37,pos:"MIL",name:"Joshua Kimmich",force:89,photo:"⚙️",rarity:"toty"}],timeMin:"09:32",timeMax:"17:34",dist:2144,level:4},
+  25: {balises:[{num:67,pos:"ATT",name:"Bukayo Saka",force:88,photo:"🚀",rarity:"toty"},{num:41,pos:"ATT",name:"Heung-min Son",force:90,photo:"🚀",rarity:"toty"},{num:44,pos:"ATT",name:"Rafael Leao",force:90,photo:"🚀",rarity:"toty"}],timeMin:"09:47",timeMax:"18:05",dist:2213,level:4},
+  26: {balises:[{num:64,pos:"MIL",name:"Jude Bellingham",force:89,photo:"⚙️",rarity:"toty"},{num:37,pos:"BUT",name:"Antoine Griezmann",force:91,photo:"⚽",rarity:"toty"},{num:54,pos:"BUT",name:"Lautaro Martinez",force:91,photo:"⚽",rarity:"toty"}],timeMin:"09:53",timeMax:"18:17",dist:2238,level:4},
+  27: {balises:[{num:74,pos:"MIL",name:"Rodri",force:90,photo:"⚙️",rarity:"toty"},{num:70,pos:"BUT",name:"Robert Lewandowski",force:92,photo:"⚽",rarity:"toty"},{num:41,pos:"BUT",name:"Victor Osimhen",force:92,photo:"⚽",rarity:"toty"}],timeMin:"10:06",timeMax:"18:43",dist:2296,level:4},
+  28: {balises:[{num:41,pos:"MIL",name:"Kevin De Bruyne",force:92,photo:"⚙️",rarity:"toty"},{num:60,pos:"GB",name:"Ederson",force:93,photo:"🧤",rarity:"toty"},{num:68,pos:"GB",name:"Marc-Andre ter Stegen",force:93,photo:"🧤",rarity:"toty"}],timeMin:"10:12",timeMax:"18:55",dist:2322,level:4},
+  29: {balises:[{num:68,pos:"BUT",name:"Kylian Mbappe",force:95,photo:"⚽",rarity:"toty"},{num:74,pos:"ATT",name:"Neymar Jr",force:94,photo:"🚀",rarity:"toty"},{num:46,pos:"MIL",name:"Phil Foden",force:94,photo:"⚙️",rarity:"toty"}],timeMin:"10:36",timeMax:"19:43",dist:2431,level:4},
+  30: {balises:[{num:36,pos:"ATT",name:"Lionel Messi",force:98,photo:"🚀",rarity:"toty"},{num:67,pos:"BUT",name:"Cristiano Ronaldo",force:96,photo:"⚽",rarity:"toty"},{num:75,pos:"BUT",name:"Karim Benzema",force:96,photo:"⚽",rarity:"toty"}],timeMin:"11:39",timeMax:"21:49",dist:2710,level:4},
 };
 
-// Fill any missing balises with random players
-for(let i=1;i<=30;i++){
-  if(!BALISE_DATA[i]){
-    const pool=[
-      {name:'Joueur '+i,pos:['GB','DEF','MIL','ATT'][i%4],photo:'⚽',force:60+i,rarity:'bronze',level:1}
-    ];
-    BALISE_DATA[i]=pool[0];
-  }
+// Cartes par parcours (niveau)
+const CARTES_PAR_NIVEAU = {1:[1,2,3,4,5,6,7], 2:[8,9,10,11,12,13,14,15,16], 3:[17,18,19,20,21,22,23], 4:[24,25,26,27,28,29,30]};
+
+// Lookup: balise number → {carte, joueur} pour la carte active
+function getPlayerFromBalise(baliseNum){
+  if(!E.cardNum) return null;
+  const carte = CARTES[E.cardNum];
+  if(!carte) return null;
+  return carte.balises.find(b => b.num === baliseNum) || null;
 }
 
 const SCOUTS = [
@@ -880,8 +863,8 @@ const SCOUTS = [
   "Cherche dans la vegetation basse, bord de terrain.",
 ];
 
-const POS_LABELS = {GB:'Gardien', DEF:'Defenseur', MIL:'Milieu', ATT:'Attaquant'};
-const POS_COLORS = {GB:'#60a5fa', DEF:'#4ade80', MIL:'#fbbf24', ATT:'#f87171'};
+const POS_LABELS = {GB:'Gardien', DEF:'Defenseur', MIL:'Milieu', ATT:'Attaquant', BUT:'Buteur'};
+const POS_COLORS = {GB:'#60a5fa', DEF:'#4ade80', MIL:'#fbbf24', ATT:'#f87171', BUT:'#f87171'};
 
 // ================================================================
 // STATE
@@ -891,14 +874,6 @@ const TEAM_LABEL  = {rouge:'ROUGE FC', bleu:'BLEU FC', blanc:'BLANC FC'};
 const TEAM_COLOR  = {rouge:'#ff4d54', bleu:'#4d80ff', blanc:'#d0d0d0'};
 const LEVEL_LABELS= ['DIVISION 4','LIGUE 1','LIGUE DES CHAMPIONS','TEAM OF THE YEAR'];
 const LEVEL_COLORS= ['#22c55e','#3b82f6','#a855f7','#f59e0b'];
-
-// Default objectives per level [distMeters, timeSecs]
-let OBJECTIVES = [
-  {dist:1500, time:10*60},
-  {dist:2000, time:14*60},
-  {dist:2500, time:18*60},
-  {dist:3000, time:24*60},
-];
 
 // Prof state
 let PROF = {
@@ -911,11 +886,11 @@ let battleDone = false;
 
 // Élève state (persisted in localStorage)
 let E = {
-  team: null,        // locked team
+  team: null,
   level: null,
   cardNum: null,
-  found: [],         // [{...player, balise}]
-  balises: [],       // validated balise numbers
+  found: [],
+  balises: [],
   hints: 2,
   distMeters: 0,
   elapsedSecs: 0,
@@ -929,7 +904,6 @@ let E = {
 let gpsWatchId = null;
 let lastGpsPos = null;
 let timerInterval = null;
-let pendingTeamChoice = null;
 
 // ================================================================
 // NAV & MODALS
@@ -967,72 +941,24 @@ function saveEleveState(){
 }
 
 // ================================================================
-// ENTER ÉLÈVE (check lock)
+// ENTER ÉLÈVE
 // ================================================================
 function enterEleve(){
-  if(E.team){
-    // Already locked — show team, skip to course
-    updateTeamLockUI();
-    goTo('screen-team');
-  } else {
-    goTo('screen-team');
-  }
-}
-
-function updateTeamLockUI(){
-  if(!E.team) return;
-  const banner = document.getElementById('team-lock-banner');
-  document.getElementById('locked-team-name').textContent = TEAM_LABEL[E.team];
-  banner.style.display = 'flex';
-  // Disable all team cards except the locked one
-  ['rouge','bleu','blanc'].forEach(t=>{
-    const card = document.getElementById('tc-'+t);
-    if(t !== E.team){
-      card.style.opacity = '0.3';
-      card.style.pointerEvents = 'none';
-    } else {
-      card.classList.add('selected');
-    }
-  });
-  document.getElementById('btn-val-team').style.display = 'none';
-  // Add continue button
-  const existing = document.getElementById('btn-continue-team');
-  if(!existing){
-    const btn = document.createElement('button');
-    btn.id = 'btn-continue-team';
-    btn.className = 'btn btn-green';
-    btn.textContent = '→ CONTINUER';
-    btn.onclick = goToCourse;
-    document.querySelector('#screen-team .text-c').appendChild(btn);
-  }
+  goTo('screen-team');
 }
 
 // ================================================================
-// TEAM SELECTION
+// TEAM SELECTION — simple, no lock
 // ================================================================
 function selectTeam(team){
-  if(E.team) return; // locked
-  pendingTeamChoice = team;
+  E.team = team;
   document.querySelectorAll('.team-card').forEach(c=>c.classList.remove('selected'));
   document.getElementById('tc-'+team).classList.add('selected');
   document.getElementById('btn-val-team').style.display = 'inline-flex';
 }
 
 function confirmTeam(){
-  if(!pendingTeamChoice) return;
-  // Show confirm modal
-  document.getElementById('confirm-team-jersey').textContent = TEAM_JERSEY[pendingTeamChoice];
-  document.getElementById('confirm-team-name').textContent = TEAM_LABEL[pendingTeamChoice];
-  document.getElementById('confirm-team-name').style.color = TEAM_COLOR[pendingTeamChoice];
-  document.getElementById('confirm-team-inner').style.borderColor = TEAM_COLOR[pendingTeamChoice];
-  openModal('modal-confirm-team');
-}
-
-function lockTeam(){
-  E.team = pendingTeamChoice;
-  saveEleveState();
-  closeModal('modal-confirm-team');
-  updateTeamLockUI();
+  if(!E.team) return;
   goToCourse();
 }
 
@@ -1041,6 +967,9 @@ function lockTeam(){
 // ================================================================
 function goToCourse(){
   if(!E.team) return;
+  // Reset level/card for a fresh hunt
+  E.level = null;
+  E.cardNum = null;
   document.getElementById('course-pill').innerHTML =
     `<span class="pill ${E.team}">${TEAM_JERSEY[E.team]} ${TEAM_LABEL[E.team]}</span>`;
   buildCourseGrid();
@@ -1051,10 +980,13 @@ function buildCourseGrid(){
   const grid = document.getElementById('course-grid');
   if(!grid) return;
   const badges = ['FACILE','MOYEN','DIFFICILE','EXPERT'];
+  const carteRanges = ['Cartes 1 à 7','Cartes 8 à 16','Cartes 17 à 23','Cartes 24 à 30'];
+  // Pick representative carte from each level for dist display
+  const repCartes = [1, 8, 17, 24];
   grid.innerHTML = [0,1,2,3].map(i=>{
-    const obj = OBJECTIVES[i];
-    const distKm = obj.dist >= 1000 ? (obj.dist/1000).toFixed(1)+'km' : obj.dist+'m';
-    const timeFmt = formatTime(obj.time);
+    const rep = CARTES[repCartes[i]];
+    const maxCarte = CARTES[CARTES_PAR_NIVEAU[i+1][CARTES_PAR_NIVEAU[i+1].length-1]];
+    const distRange = rep.dist+' – '+maxCarte.dist+' m';
     return `
     <div class="level-card level-${i+1} ${E.level===i+1?'selected':''}" onclick="selectLevel(${i+1})">
       <div class="level-top">
@@ -1064,8 +996,8 @@ function buildCourseGrid(){
       <div class="level-title">${LEVEL_LABELS[i]}</div>
       <div class="stars">${'★'.repeat(i+1)}${'☆'.repeat(3-i)}</div>
       <div class="level-obj">
-        <span class="level-obj-tag">📍 ${distKm}</span>
-        <span class="level-obj-tag">⏱️ ${timeFmt}</span>
+        <span class="level-obj-tag">📍 ${distRange}</span>
+        <span class="level-obj-tag">🃏 ${carteRanges[i]}</span>
       </div>
     </div>`;
   }).join('');
@@ -1080,39 +1012,51 @@ function selectLevel(lv){
 }
 
 // ================================================================
-// CARD NUMBER
+// CARD SELECTION — dropdown based on level
 // ================================================================
+function goToCard(){
+  if(!E.level) return;
+  E.cardNum = null;
+  const cartesLevel = CARTES_PAR_NIVEAU[E.level];
+  const carte0 = CARTES[cartesLevel[0]];
+
+  document.getElementById('card-pill').innerHTML =
+    `<span class="pill ${E.team}">${TEAM_JERSEY[E.team]} ${TEAM_LABEL[E.team]}</span>
+     <span style="font-family:var(--C);font-size:11px;letter-spacing:2px;color:rgba(245,245,245,.4);margin-left:6px">${LEVEL_LABELS[E.level-1]}</span>`;
+
+  // Build dropdown options
+  const select = document.getElementById('card-number-input');
+  select.innerHTML = '<option value="">-- Choisir --</option>' +
+    cartesLevel.map(n => `<option value="${n}">Carte ${n}</option>`).join('');
+  select.value = '';
+
+  document.getElementById('card-error').textContent = '';
+  document.getElementById('btn-start-hunt').disabled = true;
+  document.getElementById('card-obj-recap').innerHTML = '';
+  goTo('screen-card');
+}
+
 function onCardInput(){
   const val = parseInt(document.getElementById('card-number-input').value);
   const err = document.getElementById('card-error');
   const btn = document.getElementById('btn-start-hunt');
-  if(val >= 1 && val <= 30){
+  if(val && CARTES[val] && CARTES[val].level === E.level){
     err.textContent = '';
     btn.disabled = false;
     E.cardNum = val;
-  } else {
-    err.textContent = val ? 'Numéro invalide — entre 1 et 30.' : '';
-    btn.disabled = true;
-  }
-  // Update recap
-  if(E.level){
-    const obj = OBJECTIVES[E.level-1];
-    const distKm = obj.dist >= 1000 ? (obj.dist/1000).toFixed(1)+' km' : obj.dist+' m';
+    const carte = CARTES[val];
+    // Show balises attendues
+    const balisesStr = carte.balises.map(b=>`Balise <strong>${b.num}</strong>`).join(' · ');
     document.getElementById('card-obj-recap').innerHTML =
-      `<span style="color:var(--green)">📍 Objectif distance :</span> ${distKm}<br>
-       <span style="color:#60a5fa">⏱️ Objectif temps :</span> ${formatTime(obj.time)}<br>
-       <span style="color:var(--gold)">🎯 Joueurs à recruter :</span> 3 postes différents (GB, DEF, MIL, ATT)`;
+      `<span style="color:var(--green)">📍 Distance :</span> ${carte.dist} m &nbsp;·&nbsp;
+       <span style="color:#60a5fa">⏱️ Tps min :</span> ${carte.timeMin} &nbsp;·&nbsp;
+       <span style="color:#f59e0b">⏱️ Tps max :</span> ${carte.timeMax}<br><br>
+       <span style="color:var(--gold)">🎯 Balises de ta carte :</span> ${balisesStr}`;
+  } else {
+    btn.disabled = true;
+    E.cardNum = null;
+    document.getElementById('card-obj-recap').innerHTML = '';
   }
-}
-
-function goToCard(){
-  if(!E.level) return;
-  const pill = TEAM_JERSEY[E.team]+' '+TEAM_LABEL[E.team];
-  document.getElementById('card-pill').innerHTML =
-    `<span class="pill ${E.team}">${TEAM_JERSEY[E.team]} ${TEAM_LABEL[E.team]}</span>
-     <span style="font-family:var(--C);font-size:11px;letter-spacing:2px;color:rgba(245,245,245,.4);margin-left:6px">${LEVEL_LABELS[E.level-1]}</span>`;
-  onCardInput();
-  goTo('screen-card');
 }
 
 // ================================================================
@@ -1131,11 +1075,22 @@ function startHunt(){
   E.bonusDef = false;
   lastGpsPos = null;
   saveEleveState();
-
   renderHunt();
   startGPS();
   startTimer();
   goTo('screen-hunt');
+}
+
+// Get dist/time objectives from the selected carte
+function getCarteObj(){
+  const carte = CARTES[E.cardNum];
+  if(!carte) return {dist:1000, timeMinSecs:600, timeMaxSecs:1200};
+  const parseMMSS = s => { const [m,sec]=String(s).split(':').map(Number); return m*60+(sec||0); };
+  return {
+    dist: carte.dist,
+    timeMinSecs: parseMMSS(carte.timeMin),
+    timeMaxSecs: parseMMSS(carte.timeMax),
+  };
 }
 
 // ================================================================
@@ -1195,18 +1150,17 @@ function stopTimer(){ clearInterval(timerInterval); }
 // LIVE BAR UPDATE
 // ================================================================
 function updateLiveBar(){
-  if(!E.level) return;
-  const obj = OBJECTIVES[E.level-1];
+  if(!E.cardNum) return;
+  const obj = getCarteObj();
   const distPct = Math.min(100, (E.distMeters/obj.dist)*100);
-  const timePct = Math.min(100, (E.elapsedSecs/obj.time)*100);
-  const timeLeft = obj.time - E.elapsedSecs;
+  // Time: green if under timeMin, orange approaching timeMax, red if over timeMax
+  const timePct = Math.min(100, (E.elapsedSecs/obj.timeMaxSecs)*100);
 
   document.getElementById('live-dist').textContent =
     E.distMeters >= 1000 ? (E.distMeters/1000).toFixed(2)+' km' : Math.round(E.distMeters)+' m';
   document.getElementById('live-time').textContent = formatTime(E.elapsedSecs);
-  document.getElementById('dist-obj-lbl').textContent =
-    obj.dist >= 1000 ? (obj.dist/1000).toFixed(1)+' km' : obj.dist+' m';
-  document.getElementById('time-obj-lbl').textContent = formatTime(obj.time);
+  document.getElementById('dist-obj-lbl').textContent = obj.dist+' m';
+  document.getElementById('time-obj-lbl').textContent = CARTES[E.cardNum].timeMin+' / '+CARTES[E.cardNum].timeMax;
 
   const distBar = document.getElementById('dist-bar');
   distBar.style.width = distPct+'%';
@@ -1215,21 +1169,19 @@ function updateLiveBar(){
   const timeBar = document.getElementById('time-bar');
   timeBar.style.width = timePct+'%';
   if(timePct >= 100) timeBar.className = 'mini-fill danger';
-  else if(timePct >= 80) timeBar.className = 'mini-fill warn';
+  else if(E.elapsedSecs > obj.timeMinSecs) timeBar.className = 'mini-fill warn';
   else timeBar.className = 'mini-fill time';
 
-  // live val colors
-  document.getElementById('live-dist').style.color =
-    distPct >= 100 ? 'var(--green)' : 'var(--white)';
+  document.getElementById('live-dist').style.color = distPct >= 100 ? 'var(--green)' : 'var(--white)';
   document.getElementById('live-time').style.color =
-    timePct >= 100 ? '#f87171' : timePct >= 80 ? '#fbbf24' : 'var(--white)';
+    E.elapsedSecs > obj.timeMaxSecs ? '#f87171' : E.elapsedSecs > obj.timeMinSecs ? '#fbbf24' : 'var(--white)';
 }
 
 // ================================================================
 // RENDER HUNT
 // ================================================================
 function renderHunt(){
-  const obj = OBJECTIVES[(E.level||1)-1];
+  const carte = CARTES[E.cardNum];
   document.getElementById('hunt-pills').innerHTML =
     `<span class="pill ${E.team}">${TEAM_JERSEY[E.team]} ${TEAM_LABEL[E.team]}</span>
      <span style="font-family:var(--C);font-size:11px;letter-spacing:2px;color:rgba(245,245,245,.4);margin-left:8px">
@@ -1237,14 +1189,14 @@ function renderHunt(){
   document.getElementById('hb-found').textContent = `${E.found.length}/3`;
   document.getElementById('hb-balises').textContent = E.balises.length;
   document.getElementById('hb-hints').textContent = E.hints;
-  document.getElementById('btn-hint').setAttribute(E.hints<=0?'disabled':'x','');
   if(E.hints<=0) document.getElementById('btn-hint').setAttribute('disabled','');
   else document.getElementById('btn-hint').removeAttribute('disabled');
   document.getElementById('hint-count').textContent = E.hints;
   document.getElementById('hunt-progress').style.width = (E.found.length/3*100)+'%';
-  document.getElementById('dist-obj-lbl').textContent =
-    obj.dist >= 1000 ? (obj.dist/1000).toFixed(1)+' km' : obj.dist+' m';
-  document.getElementById('time-obj-lbl').textContent = formatTime(obj.time);
+  if(carte){
+    document.getElementById('dist-obj-lbl').textContent = carte.dist+' m';
+    document.getElementById('time-obj-lbl').textContent = carte.timeMin+' / '+carte.timeMax;
+  }
   updateLiveBar();
   renderSlots();
 }
@@ -1284,22 +1236,29 @@ function validateBalise(){
   const err   = document.getElementById('balise-error');
   const num   = parseInt(input.value);
 
-  if(!num || num < 1 || num > 99){ err.textContent='Numéro invalide.'; return; }
+  if(!num || num < 1){ err.textContent='Numéro invalide.'; return; }
   err.textContent = '';
 
   if(E.balises.includes(num)){ openModal('modal-already'); return; }
   if(E.found.length >= 3){ openModal('modal-max'); return; }
 
-  const player = BALISE_DATA[num];
-  if(!player){ err.textContent='Balise introuvable — vérifie le numéro.'; return; }
+  const player = getPlayerFromBalise(num);
+  if(!player){
+    err.textContent = 'Cette balise ne fait pas partie de ta carte. Vérifie le numéro !';
+    E.balises.push(num); // count the scan attempt
+    saveEleveState();
+    renderHunt();
+    input.value='';
+    return;
+  }
 
   // Check if pos already taken
   const takenPos = E.found.map(p=>p.pos);
   if(takenPos.includes(player.pos)){
     document.getElementById('pos-taken-msg').textContent =
-      `Tu as déjà un ${POS_LABELS[player.pos]}. Cherche une balise avec un autre poste !`;
+      `Tu as déjà un ${POS_LABELS[player.pos]||player.pos}. Cherche une balise avec un autre poste !`;
     openModal('modal-pos-taken');
-    E.balises.push(num); // count the try but don't add player
+    E.balises.push(num);
     saveEleveState();
     renderHunt();
     input.value='';
@@ -1322,11 +1281,11 @@ function validateBalise(){
   document.getElementById('reveal-title').style.color = rc[player.rarity];
   document.getElementById('reveal-card').className = `player-reveal-card ${player.rarity}`;
   document.getElementById('rc-rating').textContent  = player.force;
-  document.getElementById('rc-pos-b').textContent   = `${player.pos} — ${POS_LABELS[player.pos]}`;
+  document.getElementById('rc-pos-b').textContent   = `${player.pos} — ${POS_LABELS[player.pos]||player.pos}`;
   document.getElementById('rc-pos-b').style.cssText = `background:${posColor}22;color:${posColor};border:1px solid ${posColor};font-family:var(--C);font-size:10px;font-weight:700;letter-spacing:2px;padding:3px 10px;border-radius:10px;margin-bottom:6px;display:inline-block;`;
   document.getElementById('rc-photo').textContent   = player.photo;
   document.getElementById('rc-name').textContent    = player.name;
-  document.getElementById('rc-force').textContent   = `Force : ${player.force}`;
+  document.getElementById('rc-force').textContent   = `Force : ${player.force} pts`;
   const rlEl = document.getElementById('rc-rarity-label');
   rlEl.textContent = rl[player.rarity];
   rlEl.style.cssText = `background:${rc[player.rarity]}22;color:${rc[player.rarity]};border:1px solid ${rc[player.rarity]};`;
@@ -1361,9 +1320,9 @@ function finishHunt(){
   stopTimer();
   E.huntFinished = true;
 
-  const obj = OBJECTIVES[(E.level||1)-1];
+  const obj = getCarteObj();
   E.bonusOff = E.distMeters >= obj.dist;
-  E.bonusDef = E.elapsedSecs <= obj.time;
+  E.bonusDef = E.elapsedSecs >= obj.timeMinSecs && E.elapsedSecs <= obj.timeMaxSecs;
   saveEleveState();
 
   renderRecap();
@@ -1371,15 +1330,14 @@ function finishHunt(){
 }
 
 function renderRecap(){
-  const obj = OBJECTIVES[(E.level||1)-1];
+  const carte = CARTES[E.cardNum];
+  const obj = getCarteObj();
 
-  // Pill
   document.getElementById('recap-pill').innerHTML =
     `<span class="pill ${E.team}">${TEAM_JERSEY[E.team]} ${TEAM_LABEL[E.team]}</span>
      <span style="font-family:var(--C);font-size:11px;letter-spacing:2px;color:rgba(245,245,245,.4);margin-left:8px">
        LVL ${E.level} · Carte #${E.cardNum}</span>`;
 
-  // Players
   const rc={bronze:'#d4a574',silver:'#c8c8c8',gold:'#f0c040',toty:'#c4b5fd'};
   const recapPlayers = document.getElementById('recap-players');
   const slots = [...E.found];
@@ -1393,22 +1351,19 @@ function renderRecap(){
         <div style="font-family:var(--C);font-size:9px;padding:2px 7px;border-radius:8px;background:${posColor}22;color:${posColor};border:1px solid ${posColor};margin-bottom:4px">${p.pos}</div>
         <div class="card-photo">${p.photo}</div>
         <div class="card-name">${p.name}</div>
+        <div style="font-family:var(--H);font-size:11px;color:var(--gold)">${p.force} pts</div>
       </div>`;
   }).join('');
 
-  // Stats
   const distTxt = E.distMeters>=1000 ? (E.distMeters/1000).toFixed(2)+' km' : Math.round(E.distMeters)+' m';
   document.getElementById('rs-dist').textContent    = distTxt;
   document.getElementById('rs-time').textContent    = formatTime(E.elapsedSecs);
   document.getElementById('rs-balises').textContent = E.balises.length;
   document.getElementById('rs-players').textContent = `${E.found.length}/3`;
-
-  // Color dist/time based on objective
-  const distObjTxt = obj.dist>=1000?(obj.dist/1000).toFixed(1)+' km':obj.dist+' m';
   document.getElementById('rs-dist').className = 'rs-val '+(E.bonusOff?'green':'red');
   document.getElementById('rs-time').className = 'rs-val '+(E.bonusDef?'blue':'red');
 
-  // Bonus
+  const distObjTxt = obj.dist+' m';
   const bonusArea = document.getElementById('bonus-reveal-area');
   bonusArea.innerHTML = `
     <div class="bonus-reveal ${E.bonusOff?'earned':'missed'}">
@@ -1423,7 +1378,7 @@ function renderRecap(){
       <span class="br-icon">${E.bonusDef?'🛡️':'⏰'}</span>
       <div class="br-info">
         <div class="br-title">BONUS DÉFENSIF — Temps</div>
-        <div class="br-desc">Objectif : ${formatTime(obj.time)} · Réalisé : ${formatTime(E.elapsedSecs)}</div>
+        <div class="br-desc">Objectif : entre ${carte?carte.timeMin:'?'} et ${carte?carte.timeMax:'?'} · Réalisé : ${formatTime(E.elapsedSecs)}</div>
       </div>
       <span class="br-badge ${E.bonusDef?'earned':'missed'}">${E.bonusDef?'✓ OBTENU':'✗ MANQUÉ'}</span>
     </div>
@@ -1431,17 +1386,16 @@ function renderRecap(){
 }
 
 function retourChasse(){
-  // Resume hunt
+  // Go back to course/level selection for a new hunt
+  stopGPS(); stopTimer();
   E.huntFinished = false;
+  E.huntStarted = false;
   saveEleveState();
-  renderHunt();
-  startGPS();
-  startTimer();
-  goTo('screen-hunt');
+  goToCourse();
 }
 
 function terminerMercato(){
-  // Final end — clear hunt state but keep team lock
+  stopGPS(); stopTimer();
   E.huntStarted = false;
   E.huntFinished = true;
   saveEleveState();
@@ -1449,36 +1403,29 @@ function terminerMercato(){
 }
 
 // ================================================================
-// OBJECTIVES UI (PROF)
+// PROF OBJECTIVES — read-only display from CARTES data
 // ================================================================
 function buildObjectivesUI(){
   const grid = document.getElementById('obj-grid');
   if(!grid) return;
   const colors = ['#22c55e','#3b82f6','#a855f7','#f59e0b'];
   const labels = ['DIVISION 4','LIGUE 1','LDC','TOTY'];
-  grid.innerHTML = OBJECTIVES.map((obj,i)=>`
+  const ranges = [[1,7],[8,16],[17,23],[24,30]];
+  grid.innerHTML = [0,1,2,3].map(i=>{
+    const [cMin, cMax] = ranges[i];
+    const c1 = CARTES[cMin], cN = CARTES[cMax];
+    return `
     <div class="obj-card" style="border-top:3px solid ${colors[i]}">
       <div class="obj-card-head" style="color:${colors[i]}">
         <span>0${i+1}</span> ${labels[i]}
       </div>
-      <div class="obj-row">
-        <span class="obj-lbl">📍 Distance (m)</span>
-        <input type="number" class="obj-input" value="${obj.dist}" min="100"
-          onchange="updateObj(${i},'dist',this.value)">
+      <div style="font-family:var(--C);font-size:11px;color:rgba(245,245,245,.5);line-height:1.8;">
+        <div>🃏 Cartes ${cMin} à ${cMax}</div>
+        <div>📍 ${c1.dist} – ${cN.dist} m</div>
+        <div>⏱️ ${c1.timeMin} à ${cN.timeMax} max</div>
       </div>
-      <div class="obj-row">
-        <span class="obj-lbl">⏱️ Temps (min)</span>
-        <input type="number" class="obj-input" style="border-color:rgba(59,130,246,.4);color:#60a5fa" value="${Math.round(obj.time/60)}" min="1"
-          onchange="updateObj(${i},'time',this.value)">
-      </div>
-    </div>
-  `).join('');
-}
-
-function updateObj(i, key, val){
-  if(key==='dist') OBJECTIVES[i].dist = Math.max(100, parseInt(val)||100);
-  if(key==='time') OBJECTIVES[i].time = Math.max(60, (parseInt(val)||1)*60);
-  buildCourseGrid();
+    </div>`;
+  }).join('');
 }
 
 // ================================================================
@@ -1687,21 +1634,14 @@ function renderClassement(valid,dqTeams,scores){
 function resetGame(){
   PROF={rouge:{gb:0,def:0,mil:0,att:0,boff:0,bdef:0},bleu:{gb:0,def:0,mil:0,att:0,boff:0,bdef:0},blanc:{gb:0,def:0,mil:0,att:0,boff:0,bdef:0}};
   battleDone=false;
-  // Reset eleve (keep nothing)
   E={team:null,level:null,cardNum:null,found:[],balises:[],hints:2,distMeters:0,elapsedSecs:0,huntStarted:false,huntFinished:false,bonusOff:false,bonusDef:false};
   localStorage.removeItem('fut_eleve');
   stopGPS(); stopTimer();
-  // Reset team UI
   ['rouge','bleu','blanc'].forEach(t=>{
     const card=document.getElementById('tc-'+t);
     if(card){card.style.opacity='';card.style.pointerEvents='';card.classList.remove('selected');}
   });
-  document.getElementById('team-lock-banner').style.display='none';
   document.getElementById('btn-val-team').style.display='none';
-  const existing=document.getElementById('btn-continue-team');
-  if(existing) existing.remove();
-  document.querySelectorAll('.level-card').forEach(c=>c.classList.remove('selected'));
-  document.getElementById('btn-go-card').style.display='none';
   document.getElementById('btn-match').disabled=false;
   document.getElementById('btn-reset').style.display='none';
   document.getElementById('btn-classement').style.display='none';

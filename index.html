@@ -339,7 +339,7 @@ body{
     <div class="home-logo">FUT<span>ORIENT</span>ATION</div>
     <div class="home-sub">EPS · COURSE D'ORIENTATION · SAISON 2025/26</div>
     <div class="mode-grid">
-      <div class="mode-card prof" onclick="goTo('screen-prof')">
+      <div class="mode-card prof" onclick="askProfPassword()">
         <span class="mode-icon">📋</span>
         <div class="mode-title">PROFESSEUR</div>
         <div class="mode-desc">Gérer les scores, noter les lignes, configurer les parcours</div>
@@ -446,7 +446,7 @@ body{
     <div class="section-label">Niveau de difficulté</div>
     <div class="course-grid" id="course-grid"></div>
     <div class="flex-c mt-4">
-      <button class="btn btn-green" id="btn-go-card" style="display:none" onclick="goTo('screen-card')">CHOISIR MA CARTE →</button>
+      <button class="btn btn-green" id="btn-go-card" style="display:none" onclick="goToCard()">CHOISIR MA CARTE →</button>
     </div>
   </div>
 </div>
@@ -718,6 +718,25 @@ body{
   </div>
 </div>
 
+<!-- MOT DE PASSE PROF -->
+<div class="overlay" id="modal-password">
+  <div class="modal" style="border-color:var(--gold)">
+    <div style="font-size:40px;margin-bottom:10px">🔐</div>
+    <div class="modal-title" style="color:var(--gold)">ACCÈS PROFESSEUR</div>
+    <div class="modal-sub">Entrez le mot de passe</div>
+    <input type="password" id="prof-password-input"
+      style="background:rgba(0,0,0,.5);border:2px solid rgba(240,192,64,.4);border-radius:8px;color:var(--gold);font-family:var(--H);font-size:32px;width:160px;padding:10px;text-align:center;outline:none;letter-spacing:8px;margin-bottom:10px;"
+      maxlength="4" placeholder="····"
+      oninput="checkProfPassword()"
+      onkeyup="if(event.key==='Enter')submitProfPassword()">
+    <div id="password-error" style="font-family:var(--C);font-size:12px;color:#f87171;min-height:18px;margin-bottom:12px;"></div>
+    <div class="flex-c">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-password');document.getElementById('prof-password-input').value='';">✕ ANNULER</button>
+      <button class="btn btn-gold btn-sm" onclick="submitProfPassword()">→ ENTRER</button>
+    </div>
+  </div>
+</div>
+
 <!-- PLAYER REVEAL -->
 <div class="overlay" id="modal-reveal">
   <div class="modal" id="reveal-modal-inner">
@@ -941,6 +960,34 @@ function saveEleveState(){
 }
 
 // ================================================================
+// PROF PASSWORD
+// ================================================================
+function askProfPassword(){
+  document.getElementById('prof-password-input').value = '';
+  document.getElementById('password-error').textContent = '';
+  openModal('modal-password');
+  setTimeout(()=>document.getElementById('prof-password-input').focus(), 100);
+}
+
+function checkProfPassword(){
+  // Clear error while typing
+  document.getElementById('password-error').textContent = '';
+}
+
+function submitProfPassword(){
+  const val = document.getElementById('prof-password-input').value;
+  if(val === '3218'){
+    closeModal('modal-password');
+    document.getElementById('prof-password-input').value = '';
+    goTo('screen-prof');
+  } else {
+    document.getElementById('password-error').textContent = '❌ Mot de passe incorrect';
+    document.getElementById('prof-password-input').value = '';
+    document.getElementById('prof-password-input').focus();
+  }
+}
+
+// ================================================================
 // ENTER ÉLÈVE
 // ================================================================
 function enterEleve(){
@@ -1051,7 +1098,7 @@ function onCardInput(){
       `<span style="color:var(--green)">📍 Distance :</span> ${carte.dist} m &nbsp;·&nbsp;
        <span style="color:#60a5fa">⏱️ Tps min :</span> ${carte.timeMin} &nbsp;·&nbsp;
        <span style="color:#f59e0b">⏱️ Tps max :</span> ${carte.timeMax}<br><br>
-       <span style="color:var(--gold)">🎯 Balises de ta carte :</span> ${balisesStr}`;
+       <span style="color:var(--gold)">🎯 Joueurs à recruter :</span> 3 joueurs de postes différents`;
   } else {
     btn.disabled = true;
     E.cardNum = null;
@@ -1252,19 +1299,6 @@ function validateBalise(){
     return;
   }
 
-  // Check if pos already taken
-  const takenPos = E.found.map(p=>p.pos);
-  if(takenPos.includes(player.pos)){
-    document.getElementById('pos-taken-msg').textContent =
-      `Tu as déjà un ${POS_LABELS[player.pos]||player.pos}. Cherche une balise avec un autre poste !`;
-    openModal('modal-pos-taken');
-    E.balises.push(num);
-    saveEleveState();
-    renderHunt();
-    input.value='';
-    return;
-  }
-
   E.balises.push(num);
   E.found.push({...player, balise:num});
   saveEleveState();
@@ -1321,8 +1355,11 @@ function finishHunt(){
   E.huntFinished = true;
 
   const obj = getCarteObj();
-  E.bonusOff = E.distMeters >= obj.dist;
-  E.bonusDef = E.elapsedSecs >= obj.timeMinSecs && E.elapsedSecs <= obj.timeMaxSecs;
+  const found3 = E.found.length >= 3;
+  // Bonus défensif : moins que le temps min ET 3 balises trouvées
+  E.bonusDef = found3 && E.elapsedSecs <= obj.timeMinSecs;
+  // Bonus offensif : distance >= 90% de l'objectif (ou dépasse) ET 3 balises trouvées
+  E.bonusOff = found3 && E.distMeters >= obj.dist * 0.9;
   saveEleveState();
 
   renderRecap();
@@ -1364,13 +1401,15 @@ function renderRecap(){
   document.getElementById('rs-time').className = 'rs-val '+(E.bonusDef?'blue':'red');
 
   const distObjTxt = obj.dist+' m';
+  const distMin90 = Math.round(obj.dist * 0.9)+' m';
+  const found3 = E.found.length >= 3;
   const bonusArea = document.getElementById('bonus-reveal-area');
   bonusArea.innerHTML = `
     <div class="bonus-reveal ${E.bonusOff?'earned':'missed'}">
       <span class="br-icon">${E.bonusOff?'⚔️':'💨'}</span>
       <div class="br-info">
         <div class="br-title">BONUS OFFENSIF — Distance</div>
-        <div class="br-desc">Objectif : ${distObjTxt} · Réalisé : ${distTxt}</div>
+        <div class="br-desc">Objectif : ≥ ${distMin90} (±10%) · Réalisé : ${distTxt}${!found3?' · ✗ 3 balises requises':''}</div>
       </div>
       <span class="br-badge ${E.bonusOff?'earned':'missed'}">${E.bonusOff?'✓ OBTENU':'✗ MANQUÉ'}</span>
     </div>
@@ -1378,7 +1417,7 @@ function renderRecap(){
       <span class="br-icon">${E.bonusDef?'🛡️':'⏰'}</span>
       <div class="br-info">
         <div class="br-title">BONUS DÉFENSIF — Temps</div>
-        <div class="br-desc">Objectif : entre ${carte?carte.timeMin:'?'} et ${carte?carte.timeMax:'?'} · Réalisé : ${formatTime(E.elapsedSecs)}</div>
+        <div class="br-desc">Objectif : &lt; ${carte?carte.timeMin:'?'} · Réalisé : ${formatTime(E.elapsedSecs)}${!found3?' · ✗ 3 balises requises':''}</div>
       </div>
       <span class="br-badge ${E.bonusDef?'earned':'missed'}">${E.bonusDef?'✓ OBTENU':'✗ MANQUÉ'}</span>
     </div>

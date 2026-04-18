@@ -619,16 +619,45 @@ function getCarteObj(){
   return {dist:c.dist,timeMinSecs:p(c.timeMin),timeMaxSecs:Math.min(p(c.timeMax),cap)};
 }
 
-const SCOUTS=[
-  "La balise est proche d'un point d'eau ou d'un banc.",
-  "Cherche dans une zone ombragee, pres d'un arbre isole.",
-  "La balise est a moins de 80m, cap nord-est.",
-  "Elle est fixee sur un poteau ou une cloture.",
-  "Regarde en hauteur, elle n'est pas toujours au sol !",
-  "Elle se trouve a la jonction de deux chemins.",
-  "Tu es chaud ! Elle est dans un rayon de 30 metres.",
-  "Cherche dans la vegetation basse, bord de terrain.",
-];
+// Indices par balise — 3 voisines, 1 donnée au hasard
+const BALISE_VOISINES = {
+  36:['35','37','41'], 37:['36','38','39'], 38:['37','39','35'],
+  39:['38','40','37'], 40:['39','41','42'], 41:['40','42','36'],
+  42:['41','43','40'], 43:['42','44','45'], 44:['43','45','42'],
+  45:['44','46','43'], 46:['45','47','48'], 47:['46','48','45'],
+  48:['47','49','46'], 49:['48','50','47'], 50:['49','51','48'],
+  52:['51','53','50'], 53:['52','54','51'], 54:['53','55','52'],
+  56:['55','57','58'], 57:['56','58','55'], 59:['58','60','61'],
+  60:['59','61','58'], 61:['60','62','59'], 64:['63','65','67'],
+  65:['64','66','63'], 66:['65','67','68'], 67:['66','68','64'],
+  68:['67','69','66'], 69:['68','70','67'], 70:['69','71','68'],
+  71:['70','72','69'], 74:['73','75','76'], 75:['74','76','73'],
+  76:['75','74','71'],
+};
+
+function getScout(){
+  // Cherche la balise de la carte active et donne 1 voisine au hasard
+  const carte = CARTES[E.cardNum];
+  if(carte){
+    // Prend les numéros de balise de la carte
+    const nums = carte.balises.map(b=>b.num);
+    // Cherche la première balise non encore trouvée
+    const notFound = nums.filter(n=>!E.balises.includes(n));
+    const target = notFound.length>0 ? notFound[0] : nums[Math.floor(Math.random()*nums.length)];
+    const voisines = BALISE_VOISINES[target];
+    if(voisines){
+      const v = voisines[Math.floor(Math.random()*voisines.length)];
+      return 'Tu es proche de la balise ' + v + ' !';
+    }
+  }
+  // Fallback generique
+  const generiques = [
+    "La balise est proche d'un point remarquable sur la carte.",
+    "Cherche dans la zone, elle n'est pas loin !",
+    "Regarde autour de toi, tu es dans la bonne zone.",
+  ];
+  return generiques[Math.floor(Math.random()*generiques.length)];
+}
 
 const POS_LABELS={GB:'Gardien',DEF:'Defenseur',MIL:'Milieu',ATT:'Attaquant'};
 const POS_COLORS={GB:'#60a5fa',DEF:'#4ade80',MIL:'#fbbf24',ATT:'#f87171'};
@@ -1071,7 +1100,7 @@ function validateBalise(){
 function useHint(){
   if(E.hints<=0){openModal('modal-no-hint');return;}
   E.hints--;saveEleveState();
-  document.getElementById('hint-content').textContent=SCOUTS[Math.floor(Math.random()*SCOUTS.length)];
+  document.getElementById('hint-content').textContent=getScout();
   openModal('modal-hint');
   document.getElementById('hb-hints').textContent=E.hints;
   document.getElementById('hint-count').textContent=E.hints;

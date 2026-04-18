@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="fr">
 <head>
 <link rel="apple-touch-icon" href="logo.png">
@@ -249,10 +248,9 @@ body{background:var(--dark);color:var(--white);font-family:var(--B);min-height:1
 </head>
 <body>
 
-<div id="loader"><div class="loader-ball">⚽</div><div class="loader-text">FUTORIENTATION</div></div>
+<div id="loader"><div class="loader-ball">⚽</div><div class="loader-text">FUTORIENTATION</div><div id="loader-status" style="font-family:var(--C);font-size:12px;letter-spacing:3px;color:rgba(0,179,65,.5);margin-top:10px;">Chargement...</div></div>
 
 <!-- HOME -->
-
 <div id="screen-home" class="screen">
   <div class="home-hero">
     <div class="home-logo">FUT<span>ORIENT</span>ATION</div>
@@ -272,7 +270,6 @@ body{background:var(--dark);color:var(--white);font-family:var(--B);min-height:1
 </div>
 
 <!-- PROF DASHBOARD -->
-
 <div id="screen-prof" class="screen">
   <div class="header"><div class="title-main" style="font-size:clamp(26px,5vw,42px)">TABLEAU DE BORD</div><div class="title-sub">Mode Professeur</div></div>
   <div class="wrap">
@@ -302,7 +299,6 @@ body{background:var(--dark);color:var(--white);font-family:var(--B);min-height:1
 </div>
 
 <!-- ELEVE — EQUIPE -->
-
 <div id="screen-team" class="screen">
   <div class="header"><div class="title-main">FUT<span>ORIENT</span>ATION</div><div class="title-sub">Choisis ton équipe</div></div>
   <div class="wrap">
@@ -318,7 +314,6 @@ body{background:var(--dark);color:var(--white);font-family:var(--B);min-height:1
 </div>
 
 <!-- ELEVE — NIVEAU -->
-
 <div id="screen-course" class="screen">
   <div class="header"><div class="title-main" style="font-size:clamp(26px,5vw,40px)">CHOIX DU PARCOURS</div><div id="course-pill" class="text-c" style="margin-top:8px;"></div></div>
   <div class="wrap">
@@ -329,7 +324,6 @@ body{background:var(--dark);color:var(--white);font-family:var(--B);min-height:1
 </div>
 
 <!-- ELEVE — CARTE -->
-
 <div id="screen-card" class="screen">
   <div class="header"><div class="title-main" style="font-size:clamp(26px,5vw,40px)">CARTE DE PARCOURS</div><div id="card-pill" class="text-c" style="margin-top:8px;"></div></div>
   <div class="wrap">
@@ -353,7 +347,6 @@ body{background:var(--dark);color:var(--white);font-family:var(--B);min-height:1
 </div>
 
 <!-- ELEVE — CHASSE -->
-
 <div id="screen-hunt" class="screen">
   <div class="header" style="padding-bottom:10px;"><div class="title-main" style="font-size:clamp(22px,4vw,34px)">CHASSE AUX JOUEURS</div><div id="hunt-pills" class="text-c" style="margin-top:6px;"></div></div>
   <div class="wrap" style="padding-top:12px;">
@@ -365,6 +358,7 @@ body{background:var(--dark);color:var(--white);font-family:var(--B);min-height:1
     <div class="live-bar" id="live-bar">
       <div class="live-item"><span class="live-icon">📍</span><div class="live-info"><div class="live-lbl">DISTANCE</div><div class="live-val" id="live-dist">0 m</div></div></div>
       <div class="live-item"><span class="live-icon">⏱️</span><div class="live-info"><div class="live-lbl">TEMPS</div><div class="live-val" id="live-time">00:00</div></div></div>
+      <div class="live-item"><span class="live-icon">⏳</span><div class="live-info"><div class="live-lbl">RESTE</div><div class="live-val" id="live-countdown" style="color:var(--green)">--:--</div></div></div>
       <div class="live-bar-fill-wrap">
         <div style="display:flex;justify-content:space-between;margin-bottom:3px;">
           <span style="font-family:var(--C);font-size:9px;color:rgba(245,245,245,.35);">Dist obj : <span id="dist-obj-lbl">-</span></span>
@@ -413,7 +407,6 @@ body{background:var(--dark);color:var(--white);font-family:var(--B);min-height:1
 </div>
 
 <!-- ELEVE — RECAP -->
-
 <div id="screen-recap" class="screen">
   <div class="header"><div class="title-main" style="font-size:clamp(26px,5vw,40px)">RÉCAPITULATIF</div><div id="recap-pill" class="text-c" style="margin-top:6px;"></div></div>
   <div class="wrap">
@@ -436,7 +429,6 @@ body{background:var(--dark);color:var(--white);font-family:var(--B);min-height:1
 </div>
 
 <!-- BATTLE -->
-
 <div id="screen-battle" class="screen">
   <div class="header"><div class="title-main" style="font-size:clamp(24px,5vw,38px)">MATCH FINAL</div><div class="title-sub">Classement de la saison</div></div>
   <div class="wrap">
@@ -453,7 +445,6 @@ body{background:var(--dark);color:var(--white);font-family:var(--B);min-height:1
 </div>
 
 <!-- CLASSEMENT FINAL -->
-
 <div id="screen-classement" class="screen">
   <div class="header"><div class="title-main" style="font-size:clamp(24px,5vw,38px)">CLASSEMENT <span>FINAL</span></div><div class="title-sub">Résultats de la saison</div></div>
   <div class="wrap">
@@ -473,7 +464,6 @@ body{background:var(--dark);color:var(--white);font-family:var(--B);min-height:1
 <!-- ===== MODALS ===== -->
 
 <!-- SCORE PROF -->
-
 <div class="overlay" id="modal-score-prof">
   <div class="score-modal" id="score-modal-inner">
     <div class="score-modal-title" id="smt-title">ROUGE FC</div>
@@ -491,7 +481,6 @@ body{background:var(--dark);color:var(--white);font-family:var(--B);min-height:1
 </div>
 
 <!-- SOS -->
-
 <div class="overlay" id="modal-sos">
   <div class="modal" style="border-color:#ef4444;box-shadow:0 0 50px rgba(239,68,68,.4);max-width:400px;">
     <div style="font-size:52px;margin-bottom:8px;animation:sos-pulse 1s ease infinite">🆘</div>
@@ -519,7 +508,6 @@ body{background:var(--dark);color:var(--white);font-family:var(--B);min-height:1
 </div>
 
 <!-- MOT DE PASSE PROF -->
-
 <div class="overlay" id="modal-password">
   <div class="modal" style="border-color:var(--gold)">
     <div style="font-size:40px;margin-bottom:10px">🔐</div>
@@ -532,7 +520,6 @@ body{background:var(--dark);color:var(--white);font-family:var(--B);min-height:1
 </div>
 
 <!-- PLAYER REVEAL -->
-
 <div class="overlay" id="modal-reveal">
   <div class="modal" id="reveal-modal-inner">
     <div class="reveal-title" id="reveal-title">JOUEUR RECRUTÉ !</div>
@@ -549,23 +536,33 @@ body{background:var(--dark);color:var(--white);font-family:var(--B);min-height:1
 </div>
 
 <!-- ALREADY FOUND -->
-
 <div class="overlay" id="modal-already"><div class="modal"><div style="font-size:48px;margin-bottom:10px">😅</div><div class="modal-title" style="color:var(--gold)">DEJA VALIDEE !</div><div class="modal-sub">Tu as déjà scanné cette balise. Continue sur le parcours !</div><button class="btn btn-ghost btn-sm" onclick="closeModal('modal-already')">OK</button></div></div>
 
 <!-- MAX PLAYERS -->
-
 <div class="overlay" id="modal-max"><div class="modal" style="border-color:var(--green);box-shadow:0 0 40px var(--green-glow)"><div style="font-size:48px;margin-bottom:10px">🎉</div><div class="modal-title" style="color:var(--green)">EFFECTIF COMPLET !</div><div class="modal-sub">Tu as recruté 3 joueurs ! Tu peux terminer la chasse.</div><button class="btn btn-green btn-sm" onclick="closeModal('modal-max')">🏆 PARFAIT !</button></div></div>
 
 <!-- HINT -->
-
 <div class="overlay" id="modal-hint"><div class="modal" style="border-color:rgba(34,197,94,.4)"><div style="font-size:36px;margin-bottom:8px">🔭</div><div class="modal-title" style="color:#4ade80">RAPPORT DE SCOUT</div><div class="hint-box" id="hint-content">...</div><button class="btn btn-ghost btn-sm" onclick="closeModal('modal-hint')">COMPRIS !</button></div></div>
 
 <!-- NO MORE HINTS -->
-
 <div class="overlay" id="modal-no-hint"><div class="modal"><div style="font-size:48px;margin-bottom:10px">🔭</div><div class="modal-title" style="color:#f87171">PLUS D'INDICES !</div><div class="modal-sub">Tu as utilisé tous tes indices de scout.</div><button class="btn btn-ghost btn-sm" onclick="closeModal('modal-no-hint')">OK</button></div></div>
 
 <!-- WINNER -->
 
+<!-- RETOUR DEPART -->
+<div class="overlay" id="modal-retour-depart">
+  <div class="modal" style="border-color:#ef4444;box-shadow:0 0 40px rgba(239,68,68,.3)">
+    <div style="font-size:52px;margin-bottom:10px">🚩</div>
+    <div class="modal-title" style="color:#f87171;letter-spacing:2px">RETOUR AU DEPART !</div>
+    <div class="modal-sub">Tu as saisi <strong style="color:#f87171">5 mauvaises balises</strong>.<br>Tu dois retourner au point de départ avant de continuer.</div>
+    <div style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:12px;margin-bottom:16px;font-family:var(--C);font-size:12px;font-weight:600;letter-spacing:1px;color:rgba(245,245,245,.6);">
+      Le chrono continue de tourner. Rejoins le professeur au point de départ.
+    </div>
+    <button class="btn btn-red" onclick="closeModal('modal-retour-depart')" style="width:100%;justify-content:center;background:linear-gradient(135deg,#7f1d1d,#ef4444);">
+      J'AI COMPRIS — JE RENTRE
+    </button>
+  </div>
+</div>
 <div class="overlay" id="modal-winner"><div class="modal" style="border-color:var(--gold);box-shadow:0 0 60px rgba(240,192,64,.4)"><span class="trophy">🏆</span><div class="reveal-title" style="color:var(--gold)">CHAMPIONS !</div><div class="winner-name" id="winner-name">ROUGE FC</div><div style="font-size:28px;margin:8px 0" id="winner-jersey">🟥</div><div class="winner-score" id="winner-score-txt">Score final : 80 pts</div><div style="margin-top:16px"><button class="btn btn-gold btn-sm" onclick="closeModal('modal-winner')">FELICITATIONS !</button></div></div></div>
 
 <script>
@@ -617,7 +614,9 @@ function getCarteObj(){
   const c=CARTES[E.cardNum];
   if(!c) return {dist:1000,timeMinSecs:600,timeMaxSecs:1200};
   const p=s=>{const[m,sec]=String(s).split(':').map(Number);return m*60+(sec||0);};
-  return {dist:c.dist,timeMinSecs:p(c.timeMin),timeMaxSecs:p(c.timeMax)};
+  // Plafond temps max : niveaux 1-2 = 15 min, niveaux 3-4 = 20 min
+  const cap=(c.level<=2)?15*60:20*60;
+  return {dist:c.dist,timeMinSecs:p(c.timeMin),timeMaxSecs:Math.min(p(c.timeMax),cap)};
 }
 
 const SCOUTS=[
@@ -655,6 +654,7 @@ let E={
   huntStarted:false, huntFinished:false,
   bonusOff:false, bonusDef:false, penaltyHalf:false,
   parcoursHistory:[], // remis a zero uniquement a "Nouvelle Partie"
+  wrongBalises:0,      // compteur mauvaises balises - reset a chaque chasse
 };
 
 let gpsWatchId=null, lastGpsPos=null, timerInterval=null;
@@ -665,6 +665,59 @@ const EMAILJS_PUBKEY='h0Vas9PpAQZ_K27e4';
 const PROF_EMAIL='lulu120299@gmail.com';
 let sosType=null;
 
+
+// ================================================================
+// GOOGLE SHEETS — chargement automatique des cartes au demarrage
+// ================================================================
+const GSHEET_ID = '1tDSzpCHucr4xT4-Uyx55rvshj5cQsg5hklNqVD0hbEw';
+const GSHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/'+GSHEET_ID+'/export?format=csv&gid=0';
+
+function loadCartesFromGSheet(callback){
+  const status = document.getElementById('loader-status');
+  if(status) status.textContent = 'Chargement des cartes...';
+  fetch(GSHEET_CSV_URL)
+    .then(r=>{ if(!r.ok) throw new Error('403'); return r.text(); })
+    .then(csv=>{
+      const rows=csv.trim().split('\n').slice(1);
+      const posMap={M:'MIL',D:'DEF',G:'GB',A:'ATT',B:'ATT',m:'MIL',d:'DEF',g:'GB',a:'ATT',b:'ATT'};
+      const photoMap={MIL:'\u2699\ufe0f',DEF:'\ud83d\udee1\ufe0f',GB:'\ud83e\udde4',ATT:'\ud83d\ude80'};
+      const newCartes={};
+      const total=rows.length;
+      rows.forEach(row=>{
+        const cols=row.split(',');
+        const cl=s=>String(s||'').replace(/^"|"$/g,'').trim();
+        const carte=parseInt(cl(cols[0])); if(isNaN(carte)) return;
+        const lvl=carte<=Math.ceil(total*.25)?1:carte<=Math.ceil(total*.55)?2:carte<=Math.ceil(total*.77)?3:4;
+        const rarity=['bronze','silver','gold','toty'][lvl-1];
+        const b=(num,p,name,force)=>{
+          const pos=posMap[cl(p)]||'MIL';
+          const ph={MIL:'⚙️',DEF:'🛡️',GB:'🧤',ATT:'🚀'}[pos]||'⚽';
+          return {num:parseInt(num)||0,pos,name:cl(name),force:parseInt(force)||0,photo:ph,rarity};
+        };
+        newCartes[carte]={
+          balises:[b(cols[1],cols[2],cols[3],cols[4]),b(cols[5],cols[6],cols[7],cols[8]),b(cols[9],cols[10],cols[11],cols[12])],
+          timeMin:cl(cols[13]),timeMax:cl(cols[14]),dist:parseInt(cl(cols[15]))||0,level:lvl
+        };
+      });
+      if(Object.keys(newCartes).length>0){
+        Object.keys(CARTES).forEach(k=>delete CARTES[k]);
+        Object.assign(CARTES,newCartes);
+        const allNums=Object.keys(newCartes).map(Number).sort((a,b)=>a-b);
+        const q=Math.ceil(allNums.length/4);
+        CARTES_PAR_NIVEAU[1]=allNums.slice(0,q);CARTES_PAR_NIVEAU[2]=allNums.slice(q,q*2);
+        CARTES_PAR_NIVEAU[3]=allNums.slice(q*2,q*3);CARTES_PAR_NIVEAU[4]=allNums.slice(q*3);
+        try{localStorage.setItem('fut_cartes',JSON.stringify(newCartes));}catch(e){}
+        console.log('GSheet OK: '+Object.keys(newCartes).length+' cartes');
+      }
+      if(status) status.textContent='';
+      if(callback) callback();
+    })
+    .catch(err=>{
+      console.warn('GSheet inaccessible, cartes locales utilisees');
+      if(status) status.textContent='';
+      if(callback) callback();
+    });
+}
 // ================================================================
 // NAV & MODALS
 // ================================================================
@@ -679,13 +732,16 @@ function init(){
   emailjs.init(EMAILJS_PUBKEY);
   loadCartesFromStorage();
   loadEleveState();
-  buildObjectivesUI();
-  buildCourseGrid();
-  renderBattle();
-  setTimeout(()=>{
-    document.getElementById('loader').style.display='none';
-    restoreScreen();
-  },1400);
+  // Charger depuis Google Sheets puis demarrer
+  loadCartesFromGSheet(()=>{
+    buildObjectivesUI();
+    buildCourseGrid();
+    renderBattle();
+    setTimeout(()=>{
+      document.getElementById('loader').style.display='none';
+      restoreScreen();
+    },1400);
+  });
 }
 
 function restoreScreen(){
@@ -863,7 +919,7 @@ function onCardInput(){
 // ================================================================
 function startHunt(){
   if(!E.cardNum)return;
-  E.found=[];E.balises=[];E.hints=2;E.distMeters=0;E.elapsedSecs=0;
+  E.found=[];E.balises=[];E.hints=2;E.distMeters=0;E.elapsedSecs=0;E.wrongBalises=0;
   E.huntStarted=true;E.huntFinished=false;E.bonusOff=false;E.bonusDef=false;E.penaltyHalf=false;
   lastGpsPos=null;saveEleveState();
   renderHunt();startGPS();startTimer();goTo('screen-hunt');
@@ -894,8 +950,14 @@ function updateLiveBar(){
   const tp=Math.min(100,(E.elapsedSecs/obj.timeMaxSecs)*100);
   document.getElementById('live-dist').textContent=E.distMeters>=1000?(E.distMeters/1000).toFixed(2)+' km':Math.round(E.distMeters)+' m';
   document.getElementById('live-time').textContent=formatTime(E.elapsedSecs);
+  // Compte a rebours
+  const remaining=Math.max(0,obj.timeMaxSecs-E.elapsedSecs);
+  const cdEl=document.getElementById('live-countdown');
+  cdEl.textContent=remaining>0?formatTime(remaining):'TEMPS !';
+  cdEl.style.color=remaining===0?'#f87171':remaining<=60?'#f87171':remaining<=180?'#fbbf24':'var(--green)';
   document.getElementById('dist-obj-lbl').textContent=obj.dist+' m';
-  document.getElementById('time-obj-lbl').textContent=CARTES[E.cardNum].timeMin+' / '+CARTES[E.cardNum].timeMax;
+  const _capLabel=(CARTES[E.cardNum].level<=2)?'15:00':'20:00';
+  document.getElementById('time-obj-lbl').textContent=CARTES[E.cardNum].timeMin+' / '+_capLabel;
   const db=document.getElementById('dist-bar');db.style.width=dp+'%';db.className='mini-fill dist';
   const tb=document.getElementById('time-bar');tb.style.width=tp+'%';
   tb.className=tp>=100?'mini-fill danger':E.elapsedSecs>obj.timeMinSecs?'mini-fill warn':'mini-fill time';
@@ -944,8 +1006,14 @@ function validateBalise(){
   if(E.found.length>=3){openModal('modal-max');return;}
   const player=getPlayerFromBalise(num);
   if(!player){
-    err.textContent='Cette balise ne fait pas partie de ta carte !';
-    E.balises.push(num);saveEleveState();renderHunt();input.value='';return;
+    E.wrongBalises=(E.wrongBalises||0)+1;
+    E.balises.push(num); saveEleveState(); renderHunt(); input.value='';
+    if(E.wrongBalises>=5){
+      openModal('modal-retour-depart');
+      return;
+    }
+    err.textContent='Mauvaise balise ! ('+(E.wrongBalises)+'/5 erreurs)';
+    return;
   }
   E.balises.push(num);E.found.push({...player,balise:num});saveEleveState();
   const isToty=player.rarity==='toty';
@@ -1263,7 +1331,7 @@ function renderClassement(valid,dqTeams,scores){
 function resetGame(){
   PROF={rouge:{gb:0,def:0,mil:0,att:0,boff:0,bdef:0},bleu:{gb:0,def:0,mil:0,att:0,boff:0,bdef:0},blanc:{gb:0,def:0,mil:0,att:0,boff:0,bdef:0}};
   battleDone=false;
-  E={team:null,level:null,cardNum:null,found:[],balises:[],hints:2,distMeters:0,elapsedSecs:0,huntStarted:false,huntFinished:false,bonusOff:false,bonusDef:false,penaltyHalf:false,parcoursHistory:[]};
+  E={team:null,level:null,cardNum:null,found:[],balises:[],hints:2,distMeters:0,elapsedSecs:0,huntStarted:false,huntFinished:false,bonusOff:false,bonusDef:false,penaltyHalf:false,wrongBalises:0,parcoursHistory:[]};
   localStorage.removeItem('fut_eleve');
   stopGPS();stopTimer();
   ['rouge','bleu','blanc'].forEach(t=>{const c=document.getElementById('tc-'+t);if(c){c.style.opacity='';c.style.pointerEvents='';c.classList.remove('selected');}});
@@ -1279,6 +1347,5 @@ function formatTime(secs){const m=Math.floor(secs/60),s=secs%60;return`${String(
 
 window.addEventListener('load',init);
 </script>
-
 </body>
 </html>

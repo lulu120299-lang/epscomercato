@@ -670,50 +670,72 @@ let sosType=null;
 // GOOGLE SHEETS — chargement automatique des cartes au demarrage
 // ================================================================
 const GSHEET_ID = '1tDSzpCHucr4xT4-Uyx55rvshj5cQsg5hklNqVD0hbEw';
-const GSHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/'+GSHEET_ID+'/export?format=csv&gid=0';
 
 function loadCartesFromGSheet(callback){
   const status = document.getElementById('loader-status');
   if(status) status.textContent = 'Chargement des cartes...';
-  fetch(GSHEET_CSV_URL)
-    .then(r=>{ if(!r.ok) throw new Error('403'); return r.text(); })
+
+  // Cache-busting : timestamp force le navigateur a relire le Sheet a chaque fois
+  const url = 'https://docs.google.com/spreadsheets/d/'+GSHEET_ID+'/export?format=csv&gid=0&t='+Date.now();
+
+  fetch(url, {cache:'no-store'})
+    .then(r=>{ if(!r.ok) throw new Error('Sheet inaccessible ('+r.status+')'); return r.text(); })
     .then(csv=>{
-      const rows=csv.trim().split('\n').slice(1);
+      const rows=csv.trim().split('\n').slice(1).filter(r=>r.trim());
+      if(rows.length===0) throw new Error('Sheet vide');
+
       const posMap={M:'MIL',D:'DEF',G:'GB',A:'ATT',B:'ATT',m:'MIL',d:'DEF',g:'GB',a:'ATT',b:'ATT'};
-      const photoMap={MIL:'\u2699\ufe0f',DEF:'\ud83d\udee1\ufe0f',GB:'\ud83e\udde4',ATT:'\ud83d\ude80'};
       const newCartes={};
       const total=rows.length;
+
       rows.forEach(row=>{
-        const cols=row.split(',');
+        // Gestion des virgules dans les champs entre guillemets
+        const cols=[];
+        let cur='', inQ=false;
+        for(let ch of row){
+          if(ch==='"'){inQ=!inQ;}
+          else if(ch===','&&!inQ){cols.push(cur.trim());cur='';}
+          else cur+=ch;
+        }
+        cols.push(cur.trim());
+
         const cl=s=>String(s||'').replace(/^"|"$/g,'').trim();
-        const carte=parseInt(cl(cols[0])); if(isNaN(carte)) return;
+        const carte=parseInt(cl(cols[0])); if(isNaN(carte)||carte<1) return;
         const lvl=carte<=Math.ceil(total*.25)?1:carte<=Math.ceil(total*.55)?2:carte<=Math.ceil(total*.77)?3:4;
         const rarity=['bronze','silver','gold','toty'][lvl-1];
+        const ph={MIL:'⚙️',DEF:'🛡️',GB:'🧤',ATT:'🚀'};
         const b=(num,p,name,force)=>{
           const pos=posMap[cl(p)]||'MIL';
-          const ph={MIL:'⚙️',DEF:'🛡️',GB:'🧤',ATT:'🚀'}[pos]||'⚽';
-          return {num:parseInt(num)||0,pos,name:cl(name),force:parseInt(force)||0,photo:ph,rarity};
+          return {num:parseInt(cl(num))||0,pos,name:cl(name),force:parseInt(cl(force))||0,photo:ph[pos]||'⚽',rarity};
         };
         newCartes[carte]={
           balises:[b(cols[1],cols[2],cols[3],cols[4]),b(cols[5],cols[6],cols[7],cols[8]),b(cols[9],cols[10],cols[11],cols[12])],
           timeMin:cl(cols[13]),timeMax:cl(cols[14]),dist:parseInt(cl(cols[15]))||0,level:lvl
         };
       });
-      if(Object.keys(newCartes).length>0){
-        Object.keys(CARTES).forEach(k=>delete CARTES[k]);
-        Object.assign(CARTES,newCartes);
-        const allNums=Object.keys(newCartes).map(Number).sort((a,b)=>a-b);
-        const q=Math.ceil(allNums.length/4);
-        CARTES_PAR_NIVEAU[1]=allNums.slice(0,q);CARTES_PAR_NIVEAU[2]=allNums.slice(q,q*2);
-        CARTES_PAR_NIVEAU[3]=allNums.slice(q*2,q*3);CARTES_PAR_NIVEAU[4]=allNums.slice(q*3);
-        try{localStorage.setItem('fut_cartes',JSON.stringify(newCartes));}catch(e){}
-        console.log('GSheet OK: '+Object.keys(newCartes).length+' cartes');
-      }
+
+      const nb=Object.keys(newCartes).length;
+      if(nb===0) throw new Error('Aucune carte parsee');
+
+      // Ecraser les cartes existantes
+      Object.keys(CARTES).forEach(k=>delete CARTES[k]);
+      Object.assign(CARTES,newCartes);
+      const allNums=Object.keys(newCartes).map(Number).sort((a,b)=>a-b);
+      const q=Math.ceil(allNums.length/4);
+      CARTES_PAR_NIVEAU[1]=allNums.slice(0,q);
+      CARTES_PAR_NIVEAU[2]=allNums.slice(q,q*2);
+      CARTES_PAR_NIVEAU[3]=allNums.slice(q*2,q*3);
+      CARTES_PAR_NIVEAU[4]=allNums.slice(q*3);
+
+      // Sauvegarder en local (ecrase l'ancienne version)
+      try{localStorage.setItem('fut_cartes',JSON.stringify(newCartes));}catch(e){}
+
+      console.log('GSheet OK : '+nb+' cartes chargees depuis le Sheet');
       if(status) status.textContent='';
       if(callback) callback();
     })
     .catch(err=>{
-      console.warn('GSheet inaccessible, cartes locales utilisees');
+      console.warn('GSheet : '+err.message+' → cartes locales utilisees');
       if(status) status.textContent='';
       if(callback) callback();
     });

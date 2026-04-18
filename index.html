@@ -667,83 +667,83 @@ let sosType=null;
 
 
 // ================================================================
-// GOOGLE SHEETS — chargement automatique des cartes au demarrage
+// GOOGLE APPS SCRIPT — chargement automatique des cartes
 // ================================================================
-const GSHEET_ID = '1tDSzpCHucr4xT4-Uyx55rvshj5cQsg5hklNqVD0hbEw';
-
-function parseCartesCSV(csv){
-  const posMap={M:'MIL',D:'DEF',G:'GB',A:'ATT',B:'ATT',m:'MIL',d:'DEF',g:'GB',a:'ATT',b:'ATT'};
-  const ph={MIL:'⚙️',DEF:'🛡️',GB:'🧤',ATT:'🚀'};
-  const rows=csv.trim().split('\n').slice(1).filter(r=>r.trim());
-  const newCartes={};
-  const total=rows.length;
-  rows.forEach(row=>{
-    const cols=[];let cur='',inQ=false;
-    for(let ch of row){if(ch==='"'){inQ=!inQ;}else if(ch===','&&!inQ){cols.push(cur.trim());cur='';}else cur+=ch;}
-    cols.push(cur.trim());
-    const cl=s=>String(s||'').replace(/^"|"$/g,'').trim();
-    const carte=parseInt(cl(cols[0]));if(isNaN(carte)||carte<1)return;
-    const lvl=carte<=Math.ceil(total*.25)?1:carte<=Math.ceil(total*.55)?2:carte<=Math.ceil(total*.77)?3:4;
-    const rarity=['bronze','silver','gold','toty'][lvl-1];
-    const b=(num,p,name,force)=>{const pos=posMap[cl(p)]||'MIL';return{num:parseInt(cl(num))||0,pos,name:cl(name),force:parseInt(cl(force))||0,photo:ph[pos]||'⚽',rarity};};
-    newCartes[carte]={
-      balises:[b(cols[1],cols[2],cols[3],cols[4]),b(cols[5],cols[6],cols[7],cols[8]),b(cols[9],cols[10],cols[11],cols[12])],
-      timeMin:cl(cols[13]),timeMax:cl(cols[14]),dist:parseInt(cl(cols[15]))||0,level:lvl
-    };
-  });
-  return newCartes;
-}
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz9mL8aBmNv5jykWFHpBCx_wGXTHXuDQreOIP-Kguf0Ze0DUNgAYoeoPIRNBQNHtRwSHg/exec';
 
 function applyCartes(newCartes){
-  const nb=Object.keys(newCartes).length;
-  if(nb===0)return false;
-  Object.keys(CARTES).forEach(k=>delete CARTES[k]);
-  Object.assign(CARTES,newCartes);
-  const allNums=Object.keys(newCartes).map(Number).sort((a,b)=>a-b);
-  const q=Math.ceil(allNums.length/4);
-  CARTES_PAR_NIVEAU[1]=allNums.slice(0,q);CARTES_PAR_NIVEAU[2]=allNums.slice(q,q*2);
-  CARTES_PAR_NIVEAU[3]=allNums.slice(q*2,q*3);CARTES_PAR_NIVEAU[4]=allNums.slice(q*3);
-  try{localStorage.setItem('fut_cartes',JSON.stringify(newCartes));}catch(e){}
+  const nb = Object.keys(newCartes).length;
+  if(nb === 0) return false;
+  Object.keys(CARTES).forEach(k => delete CARTES[k]);
+  Object.assign(CARTES, newCartes);
+  const allNums = Object.keys(newCartes).map(Number).sort((a,b)=>a-b);
+  const q = Math.ceil(allNums.length/4);
+  CARTES_PAR_NIVEAU[1]=allNums.slice(0,q);
+  CARTES_PAR_NIVEAU[2]=allNums.slice(q,q*2);
+  CARTES_PAR_NIVEAU[3]=allNums.slice(q*2,q*3);
+  CARTES_PAR_NIVEAU[4]=allNums.slice(q*3);
+  try{localStorage.setItem('fut_cartes', JSON.stringify(newCartes));}catch(e){}
   return true;
 }
 
 function loadCartesFromGSheet(callback){
-  const status=document.getElementById('loader-status');
-  if(status)status.textContent='Chargement des cartes...';
+  const status = document.getElementById('loader-status');
+  if(status) status.textContent = 'Chargement des cartes...';
 
-  // 3 URLs testées en cascade : direct, puis 2 proxies CORS
-  const t=Date.now();
-  const urls=[
-    'https://docs.google.com/spreadsheets/d/'+GSHEET_ID+'/export?format=csv&gid=0&t='+t,
-    'https://corsproxy.io/?'+encodeURIComponent('https://docs.google.com/spreadsheets/d/'+GSHEET_ID+'/export?format=csv&gid=0&t='+t),
-    'https://api.allorigins.win/raw?url='+encodeURIComponent('https://docs.google.com/spreadsheets/d/'+GSHEET_ID+'/export?format=csv&gid=0'),
-  ];
+  const posMap = {M:'MIL',D:'DEF',G:'GB',A:'ATT',B:'ATT'};
+  const ph = {MIL:'⚙️',DEF:'🛡️',GB:'🧤',ATT:'🚀'};
 
-  function tryNext(i){
-    if(i>=urls.length){
-      console.warn('GSheet : tous les proxies ont echoue, cartes locales utilisees');
-      if(status)status.textContent='';
-      if(callback)callback();
-      return;
-    }
-    fetch(urls[i],{cache:'no-store'})
-      .then(r=>{if(!r.ok)throw new Error(r.status);return r.text();})
-      .then(csv=>{
-        const newCartes=parseCartesCSV(csv);
-        if(applyCartes(newCartes)){
-          console.log('GSheet OK via url['+i+'] : '+Object.keys(newCartes).length+' cartes');
-        } else {
-          throw new Error('Aucune carte parsee');
-        }
-        if(status)status.textContent='';
-        if(callback)callback();
-      })
-      .catch(err=>{
-        console.warn('GSheet url['+i+'] echec : '+err.message);
-        tryNext(i+1);
+  // Cache-busting
+  const url = APPS_SCRIPT_URL + '?t=' + Date.now();
+
+  fetch(url, {cache:'no-store'})
+    .then(r => { if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+    .then(data => {
+      if(!Array.isArray(data) || data.length === 0) throw new Error('Données vides');
+
+      const total = data.length;
+      const newCartes = {};
+
+      data.forEach(row => {
+        const carte = Number(row.carte);
+        if(!carte || isNaN(carte)) return;
+
+        const lvl = carte <= Math.ceil(total*.25) ? 1
+                  : carte <= Math.ceil(total*.55) ? 2
+                  : carte <= Math.ceil(total*.77) ? 3 : 4;
+        const rarity = ['bronze','silver','gold','toty'][lvl-1];
+
+        const b = (num, poste, nom, pts) => {
+          const pos = posMap[String(poste).trim()] || 'MIL';
+          return {num:Number(num)||0, pos, name:String(nom||''), force:Number(pts)||0, photo:ph[pos]||'⚽', rarity};
+        };
+
+        newCartes[carte] = {
+          balises: [
+            b(row.balise1, row.poste1, row.nom1, row.pts1),
+            b(row.balise2, row.poste2, row.nom2, row.pts2),
+            b(row.balise3, row.poste3, row.nom3, row.pts3),
+          ],
+          timeMin: String(row.tempsMin || '00:00'),
+          timeMax: String(row.tempsMax || '00:00'),
+          dist: Number(row.distance) || 0,
+          level: lvl
+        };
       });
-  }
-  tryNext(0);
+
+      if(applyCartes(newCartes)){
+        console.log('Apps Script OK : ' + Object.keys(newCartes).length + ' cartes chargées');
+      } else {
+        throw new Error('Aucune carte parsée');
+      }
+      if(status) status.textContent = '';
+      if(callback) callback();
+    })
+    .catch(err => {
+      console.warn('Apps Script inaccessible : ' + err.message + ' → cartes locales');
+      if(status) status.textContent = '';
+      if(callback) callback();
+    });
 }
 // ================================================================
 // NAV & MODALS

@@ -556,11 +556,16 @@ body{background:var(--dark);color:var(--white);font-family:var(--B);min-height:1
     <div class="modal-title" style="color:#f87171;letter-spacing:2px">RETOUR AU DEPART !</div>
     <div class="modal-sub">Tu as saisi <strong style="color:#f87171">5 mauvaises balises</strong>.<br>Tu dois retourner au point de départ avant de continuer.</div>
     <div style="background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3);border-radius:8px;padding:12px;margin-bottom:16px;font-family:var(--C);font-size:12px;font-weight:600;letter-spacing:1px;color:rgba(245,245,245,.6);">
-      Le chrono continue de tourner. Rejoins le professeur au point de départ.
+      Le chrono continue de tourner. C'est toi qui décides !
     </div>
-    <button class="btn btn-red" onclick="closeModal('modal-retour-depart')" style="width:100%;justify-content:center;background:linear-gradient(135deg,#7f1d1d,#ef4444);">
-      J'AI COMPRIS — JE RENTRE
-    </button>
+    <div class="flex-c" style="flex-direction:column;gap:10px;">
+      <button class="btn btn-red" onclick="closeModal('modal-retour-depart');retourChasse()" style="width:100%;justify-content:center;background:linear-gradient(135deg,#7f1d1d,#ef4444);">
+        🚩 JE RENTRE AU POINT DE DÉPART
+      </button>
+      <button class="btn btn-ghost btn-sm" onclick="closeModal('modal-retour-depart')" style="width:100%;justify-content:center;">
+        💪 JE CONTINUE LA CHASSE
+      </button>
+    </div>
   </div>
 </div>
 <div class="overlay" id="modal-winner"><div class="modal" style="border-color:var(--gold);box-shadow:0 0 60px rgba(240,192,64,.4)"><span class="trophy">🏆</span><div class="reveal-title" style="color:var(--gold)">CHAMPIONS !</div><div class="winner-name" id="winner-name">ROUGE FC</div><div style="font-size:28px;margin:8px 0" id="winner-jersey">🟥</div><div class="winner-score" id="winner-score-txt">Score final : 80 pts</div><div style="margin-top:16px"><button class="btn btn-gold btn-sm" onclick="closeModal('modal-winner')">FELICITATIONS !</button></div></div></div>
@@ -1066,10 +1071,14 @@ function validateBalise(){
     E.wrongBalises=(E.wrongBalises||0)+1;
     E.balises.push(num); saveEleveState(); renderHunt(); input.value='';
     if(E.wrongBalises>=5){
+      // Alerte mais pas de blocage — reset le compteur pour qu'ils puissent continuer
+      E.wrongBalises=0;
+      saveEleveState();
       openModal('modal-retour-depart');
-      return;
+      // On ne fait pas return — ils peuvent continuer
+    } else {
+      err.textContent='Mauvaise balise ! ('+E.wrongBalises+'/5 erreurs)';
     }
-    err.textContent='Mauvaise balise ! ('+(E.wrongBalises)+'/5 erreurs)';
     return;
   }
   E.balises.push(num);E.found.push({...player,balise:num});saveEleveState();
